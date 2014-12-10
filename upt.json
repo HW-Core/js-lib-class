@@ -1,0 +1,10 @@
+{
+  "name": "hw2/modules/js/src/library/class/tests",
+  "dependencies": {
+    "%parent": "hw2-core/js-library-class"
+  },
+  "keep": [
+    ".git/config"
+  ],
+  "license": "http://www.hyperweb2.com/terms"
+}
