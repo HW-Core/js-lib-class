@@ -96,7 +96,7 @@ hw2.define(function () {
             obj.__pvFlag = isPvCall;
             var constructor = __("__construct", undefined, null, null, obj);
             delete obj.__pvFlag;
-            
+
             // also base must be instantiated
             if (__base) {
                 //var base = Object.create(__base.prototype);
@@ -119,11 +119,11 @@ hw2.define(function () {
         }
 
         /*Object.defineProperty(__proto, "__construct", {value: function () {
-            },
-            enumerable: true,
-            writable: true,
-            configurable: true
-        });*/
+         },
+         enumerable: true,
+         writable: true,
+         configurable: true
+         });*/
 
         /**
          *  Magic methods and properties
@@ -141,7 +141,7 @@ hw2.define(function () {
             },
             enumerable: true
         });
-    
+
         Object.defineProperty(__proto_st, "__isChildOf", {value: function (parent) {
                 return __proto instanceof parent;
             },
@@ -150,6 +150,28 @@ hw2.define(function () {
 
         Object.defineProperty(__proto_st, "__getBase", {value: function (instance) {
                 return __base;
+            },
+            enumerable: true
+        });
+
+        Object.defineProperty(__proto, "__createInstance", {value: function () {
+                var Temp = function () {
+                }, inst, ret; // other vars
+
+                // Give the Temp constructor the Constructor's prototype
+                Temp.prototype = __proto_st;
+
+                // Create a new instance
+                inst = new Temp;
+
+                // Call the original Constructor with the temp
+                // instance as its context (i.e. its 'this' value)
+                ret = __proto_st.apply(inst, arguments);
+
+                // If an object has been returned then return it otherwise
+                // return the original instance.
+                // (consistent with behaviour of the new operator)
+                return Object(ret) === ret ? ret : inst;
             },
             enumerable: true
         });
@@ -180,7 +202,7 @@ hw2.define(function () {
          */
         Object.defineProperty(__proto, "__st", {
             value: __proto_st,
-            enumerable: true,
+            enumerable: true
         });
 
         /**
@@ -211,10 +233,10 @@ hw2.define(function () {
                     publicCall = false;
 
                 for (var i = 0; i < elements.length; ++i) {
-                    __(elements[i]["name"],
-                            elements[i]["val"],
-                            elements[i]["attributes"],
-                            elements[i]["retType"],
+                    __(elements[i]["name"] || elements[i]["n"],
+                            elements[i]["val"] || elements[i]["v"],
+                            elements[i]["attributes"] || elements[i]["a"],
+                            elements[i]["retType"] || elements[i]["r"],
                             instance,
                             publicCall);
                 }
@@ -364,7 +386,7 @@ hw2.define(function () {
                 if (old) {
                     // check for final members
                     var descr = Object.getOwnPropertyDescriptor(obj, name)
-                            || ( obj.prototype && Object.getOwnPropertyDescriptor(obj.prototype, name));
+                            || (obj.prototype && Object.getOwnPropertyDescriptor(obj.prototype, name));
                     if (descr && descr.set === undefined && descr.writable !== true) {
                         throw new SyntaxError("Final member '" + name + "' cannot be overridden");
                     }
