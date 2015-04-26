@@ -5,8 +5,101 @@
 
 'use strict';
 
-hw2.define(function () {
+hw2.define([
+    'hw2!{PATH_CORE}modules/js/modules/weakmap/index.js'
+], function () {
     var $ = this;
+
+    /*
+     * 
+     * SHARED BETWEEN CLASSES
+     */
+
+    function __SharedDelegator () {
+    }
+
+
+    function __createStorage (creator) {
+        var storage = new WeakMap();
+        creator = typeof creator === 'function' ? creator : Object.create.bind(null, null, {});
+        return function store (o, v) {
+            if (v) {
+                storage.set(o, v);
+            } else {
+                v = storage.get(o);
+                if (!v) {
+                    storage.set(o, v = creator(o));
+                }
+            }
+            return v;
+        };
+    }
+
+    // for static and traits
+    function __inherit (src, dest, isBase, __define) {
+        var extend = function (destination, source, isBase) {
+            for (var prop in source) {
+                if ((prop.indexOf("__") !== 0) // exclude Class magic methods
+                    && prop !== "prototype") {
+                    if (isBase) {
+                        destination[prop] = source[prop];
+                    } else { //[TODO] remove and test
+                        // traits don't have proper scope, so we must use 
+                        // destination as scoping object
+                        __define(prop, source[prop], null, null, destination);
+                    }
+                }
+            }
+        };
+
+        if (isBase) {
+            extend(dest, src, true);
+        } else {
+            // traits
+            if (src instanceof Array) {
+                src.forEach(function (t) {
+                    extend(dest, t, false);
+                    extend(dest.prototype, t.prototype, false);
+                });
+            } else {
+                extend(dest, src, false);
+                extend(dest.prototype, src.prototype, false);
+            }
+        }
+
+    }
+
+    var __caller = null;
+
+    // Functions within the closure can only be accessed by other functions
+    // within the closure (this is the standard way of doing private methods)
+
+    // This function checks whether the calling method belongs to a certain
+    // class (i.e. whether it is contained within the class's prototype object
+    // For protected fields, the prototype of the calling object's constructor is passed.
+    // "alt" parameter could be used to check the static properties too
+    function __checkAccess (scope, alt) {
+        // If access attempted in global context, caller may be null
+        if (!__caller) {
+            return false;
+        }
+
+        // Implemented methods have an _name property set.
+        var name = __caller._name;
+
+        var prop = (scope && name in scope && scope[name]) || (alt && name in alt && alt[name]);
+
+        // compare the prototype of caller and scope property
+        if (Object.getPrototypeOf(__caller) === Object.getPrototypeOf(prop))
+            return true;
+
+        return false;
+    }
+
+    function __assertAccess (scope, alt) {
+        if (!__checkAccess(scope, alt))
+            throw new Error("Cannot access protected property");
+    }
 
     /**
      *
@@ -19,326 +112,318 @@ hw2.define(function () {
      * @returns {_Class}
      */
     $.Class = function (descriptor) {
-        function _pvObject () {
-            return __constructor(this, true, arguments);
-        }
 
-        function _Object () {
-            return __constructor(this, false, arguments);
-        }
-
-        var __proto_st = _Object;
-        if (descriptor && descriptor.base) {
-            __proto_st.prototype = Object.create(descriptor.base.prototype);
-        }
-
-        var __proto = __proto_st.prototype;
-
-
-        var __pvMembers = {
-            st: {self: _pvObject},
-            inst: []
-        }; // private members
-        var __pendingPvInst = [];
-        var __base = null;
-
-        var __freeIds = {};
-
-        var __setFreeId = function (id) {
-            __freeIds[id] = true;
+        // static "hard" map
+        var __staticMembers = {
+            priv: {}
         };
 
-        var __delFreeId = function (id) {
-            delete __freeIds[id];
+        var __pendingInst = [];
+        // default destruct, will be overwritten from user defined
+        __pendingInst["__destruct"] = {
+            val: function () {
+            },
+            attributes: ["public"]
         };
 
-        var __getFirstFreeId = function () {
-            for (var id in __freeIds) {
-                __delFreeId(id);
-                return id; // if there's a free id return directly
+        function __Class () {
+            function __PvDelegator () {
             }
 
-            // otherwise increment the array
-            return __pvMembers.inst.length;
-        };
+            function __Object () {
+                return __constructor(this, arguments);
+            }
 
-        function __constructor (scope, isPvCall, args) {
-            var absInit = false;
-            if (__proto_st.__isAbstract) {
-                if (scope.__st["__getBase"] !== undefined && scope.__st.__getBase() !== __proto_st) {
-                    throw new Error('Abstract class may not be constructed');
-                } else {
-                    absInit = true;
+            var __base = null;
+
+            /**
+             * Extends base ( prototype only, static methods are inherited below )
+             */
+            if (descriptor) {
+                if (descriptor.type && typeof descriptor.type === "string")
+                    descriptor.type = descriptor.type.split(" ");
+
+                if (descriptor.type) {
+                    if (descriptor.type.indexOf("abstract") >= 0)
+                        Object.defineProperty(__Object, "__isAbstract", {
+                            value: true,
+                            writable: false,
+                            configurable: false,
+                            enumerable: true
+                        });
+
+                    if (descriptor.type.indexOf("static") >= 0) {
+                        Object.defineProperty(__Object, "__isStatic", {
+                            value: true,
+                            writable: false,
+                            configurable: false,
+                            enumerable: true
+                        });
+                    }
+
+                    if (descriptor.type.indexOf("final") >= 0) {
+                        Object.defineProperty(__Object, "__isFinal", {
+                            value: true,
+                            writable: false,
+                            configurable: false,
+                            enumerable: true
+                        });
+                    }
+                }
+
+
+                if (descriptor.base) {
+                    if (descriptor.base.__isFinal)
+                        throw Error("final class cannot be extended!");
+
+                    __Object.prototype = Object.create(descriptor.base.prototype);
+
+                    __base = descriptor.base;
                 }
             }
 
-            if (__proto_st.__isStatic) {
-                throw new Error('Static class may not be instantiated');
-            }
+            var __proto = __Object.prototype;
 
-            var obj = Object.create(__proto);
+            // Weak Map for instanced
+            var __instMembers = {
+                priv: __createStorage()
+            };
 
-            var id = __getFirstFreeId();
-            __("__id", id, "public", null, obj);
-            __pvMembers.inst[id] = {};
-
-            for (var prop in __pendingPvInst) {
-                var m = __pendingPvInst[prop];
-                __(prop, m.val, m.attributes, m.retType, obj);
-            }
-
-
-            // check for private constructor
-            if (!isPvCall && __pvMembers.inst[id]["__construct"] !== undefined)
-                throw new Error('Class with private constructor may not be instantiated');
-
-            // this returns constructor and checks about protected accessor
-            obj.__pvFlag = isPvCall;
-            var constructor = __("__construct", undefined, null, null, obj);
-            delete obj.__pvFlag;
-
-            // also base must be instantiated
-            if (__base) {
-                //var base = Object.create(__base.prototype);
-                __("__parent", __base.apply(obj, args), "private", null, obj);
-            }
-
-            if (constructor !== undefined) {
-                // call constructor
-                if (!absInit) {
-                    constructor.apply(obj, args);
-                }
-            }
-
-            if (__proto_st.__isFinal) {
-                //Object.preventExtensions(Obj);
-                Object.seal(obj);
-            }
-
-            return obj;
-        }
-
-        /*Object.defineProperty(__proto, "__construct", {value: function () {
-         },
-         enumerable: true,
-         writable: true,
-         configurable: true
-         });*/
-
-        /**
-         *  Magic methods and properties
-         */
-
-        // dummy method for "duck type" checking
-        Object.defineProperty(__proto, "__isClass", {value: function () {
-                return true;
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(__proto_st, "__isClass", {value: function (instance) {
-                return "__isClass" in instance;
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(__proto_st, "__isChildOf", {value: function (parent) {
-                return __proto instanceof parent;
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(__proto_st, "__getBase", {value: function (instance) {
-                return __base;
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(__proto, "__createInstance", {value: function () {
-                var Temp = function () {
-                }, inst, ret; // other vars
-
-                // Give the Temp constructor the Constructor's prototype
-                Temp.prototype = __proto_st;
-
-                // Create a new instance
-                inst = new Temp;
-
-                // Call the original Constructor with the temp
-                // instance as its context (i.e. its 'this' value)
-                ret = __proto_st.apply(inst, arguments);
-
-                // If an object has been returned then return it otherwise
-                // return the original instance.
-                // (consistent with behaviour of the new operator)
-                return Object(ret) === ret ? ret : inst;
-            },
-            enumerable: true
-        });
-
-        /**
-         * Destroy the object 
-         * TODO: reorganizing the instance array when it grows up
-         */
-        Object.defineProperty(__proto, "__destruct", {value: function () {
-                var id = this.__("__id");
-                delete __pvMembers.inst[id];
-                __setFreeId(id);
-
-                for (var prop in this) { // destroy all object properties
-                    delete this[prop];
-                }
-
+            /**
+             * Destroy the object ( private method )
+             */
+            function __destructor () {
                 this.__proto__ = null;
 
-                return null;
-            },
-            enumerable: true
-                    //writable: true
-        });
+                // destroy the rest of chain
+                this.__parent && this.__parent.__destructor();
 
-        /**
-         * expose the static public members to call directly from an instantiated object
-         */
-        Object.defineProperty(__proto, "__st", {
-            value: __proto_st,
-            enumerable: true
-        });
+                return this; // return this to be combined with delete: delete myObj.__destruct();
+            }
 
-        /**
-         * Inherit methods from another class ( such as traits )
-         */
-        Object.defineProperty(__proto, "__inherit", {value: function (src) {
-                return __inherit(src, this, false);
-            },
-            enumerable: true
-        });
+            function __constructor (scope, args) {
+                var isPvCall = __caller != null;
 
-        Object.defineProperty(__proto, "__addMembers", {value: function (elements) {
-                __proto_st.__addMembers(elements, this, arguments[1]);
-            },
-            enumerable: true
-        });
+                var absInit = false;
+                if (__Object.__isAbstract) {
+                    // if also the "root" object is abstract, then throw an error
+                    if (scope.__st.__isAbstract) {
+                        throw new Error('Abstract class may not be constructed');
+                    } else {
+                        absInit = true;
+                    }
+                }
 
-        /**
-         *
-         * @param {type} elements
-         * @param {type} instance (Optional) can be null if static member
-         * @returns {undefined}
-         */
-        Object.defineProperty(__proto_st, "__addMembers", {value: function (elements, instance) {
-                var publicCall = true;
-                // hidden argument for internal use
-                if (arguments[2] !== undefined && arguments[2] instanceof __Delegator)
-                    publicCall = false;
+                if (__Object.__isStatic) {
+                    throw new Error('Static class may not be instantiated');
+                }
 
-                for (var i = 0; i < elements.length; ++i) {
-                    __(elements[i]["name"] || elements[i]["n"],
-                            elements[i]["val"] || elements[i]["v"],
+
+                if (scope.__root) {
+                    var obj = scope.__root;
+                } else {
+                    var obj = Object.create(__proto);
+                    scope.__root = scope; // store the root scope
+                }
+
+                obj.__root = scope.__root;
+
+                for (var prop in __pendingInst) {
+                    var m = __pendingInst[prop];
+
+                    // check for private constructor
+                    if (prop === "__construct" && m.attributes.indexOf("private") >= 0 && !isPvCall)
+                        throw new Error('Class with private constructor may not be instantiated');
+
+                    if (prop === "__destruct") {
+                        // destruct workflow must be defined during
+                        // instance building
+                        var d = m.val;
+                        var dt = function () {
+                            d && d.call(obj);
+                            // after __destruct methods are casted
+                            // we need to call the private one
+                            __destructor.call(obj);
+                        };
+                        // duck punching __destruct
+                        m.val = dt;
+                    }
+
+                    __define(prop, m.val, m.attributes, m.retType, obj);
+                }
+
+                obj.__pvFlag = isPvCall;
+                // also base must be instantiated
+                if (__base) {
+                    __define("__parent", __base.apply(obj, args), "private final", null, obj);
+                }
+
+                delete obj.__pvFlag;
+
+                var constructor = obj["__construct"] || (isPvCall ? __instMembers.priv(obj.__root)["__construct"] : undefined);
+                // check __pvFlag to avoid calling parent constructor
+                if (!scope.__pvFlag && constructor !== undefined) {
+                    // call constructor
+                    if (!absInit) {
+                        constructor.apply(obj, args);
+                    }
+                }
+
+                if (__Object.__isFinal) {
+                    //Object.preventExtensions(Obj);
+                    Object.seal(obj);
+                }
+
+                return obj;
+            }
+
+            /**
+             *  Magic methods and properties
+             */
+
+            // dummy method for "duck type" checking
+            Object.defineProperty(__proto, "__isClass", {value: function () {
+                    return true;
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(__Object, "__isClass", {value: function (instance) {
+                    return "__isClass" in instance;
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(__Object, "__isChildOf", {value: function (parent) {
+                    return __proto instanceof parent;
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(__Object, "__getBase", {value: function (instance) {
+                    return __base;
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(__Object, "__getProtected", {value: function () {
+                    var publicCall = true;
+                    // hidden argument for internal use
+                    if (arguments[0] !== undefined && arguments[0] instanceof __Delegator)
+                        publicCall = false;
+
+                    for (var i = 0; i < elements.length; ++i) {
+                        __define(elements[i]["name"] || elements[i]["n"],
+                            typeof elements[i]["val"] === "undefined" ? elements[i]["v"] : elements[i]["val"],
                             elements[i]["attributes"] || elements[i]["a"],
                             elements[i]["retType"] || elements[i]["r"],
                             instance,
                             publicCall);
-                }
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(__proto, "__getMembers", {value: function (incStatic, getPriv) {
-                return __proto_st.__getMembers(incStatic ? "both" : "instance", this);
-            },
-            enumerable: true
-        });
-
-        Object.defineProperty(__proto_st, "__getMembers", {value: function (type, instance, getPriv) {
-                function getPrivate (st) {
-                    return st ? __pvMembers.inst[instance.__("__id")] : __pvMembers.st;
-                }
-
-                function getMembers (st, getPriv) {
-                    return {
-                        priv: getPriv ? getPrivate(st) : [],
-                        public: Object.keys(st ? __proto_st : instance)
-                    };
-                }
+                    }
+                },
+                enumerable: true
+            });
 
 
-                if (type === "static") {
-                    return getMembers(true, getPriv);
-                } else if (type === "instance") {
-                    return getMembers(false, getPriv);
-                } else {
-                    // both
-                    return {
-                        static: getMembers(true, getPriv),
-                        instance: getMembers(false, getPriv)
-                    };
-                }
-            },
-            enumerable: true
-        });
+            Object.defineProperty(__Object, "__createInstance", {value: function () {
+                    var Temp = function () {
+                    }, inst, ret; // other vars
 
+                    // Give the Temp constructor the Constructor's prototype
+                    Temp.prototype = __Object;
 
-        /**
-         * Add/Get a member to/from current object or prototype
-         * @param {type} name
-         * @param {type} val (Optional) giving name only, it will return the var value when it's possible
-         * @param {String} attributes (Optional)
-         * public/private
-         * static If no instance provided, this parameter will be forced.
-         * final
-         * @param {type} noInstance avoid current instance pass to get member from static 
-         *  or define to prototype if no static attribute exist and value is a function
-         * @returns
-         */
-        Object.defineProperty(__proto, "__", {value: function (name, val, attributes, retType, noInstance) {
-                return __proto_st.__(name, val, attributes, retType, noInstance ? null : this);
-            },
-            enumerable: true
-        });
+                    // Create a new instance
+                    inst = new Temp;
 
-        /**
-         * Add/Get a member to/from defined Class, object or prototype
-         * @param {type} name
-         * @param {type} val (Optional) giving name only, it will return the var value when it's possible
-         * @param {String} attributes (Optional)
-         * public/private
-         * static If no instance provided, this parameter will be forced.
-         * final
-         * @param {type} instance (Optional) will use instance instead of prototype with non static members
-         * @returns
-         */
-        Object.defineProperty(__proto_st, "__", {value: function (name, val, attributes, retType, instance) {
-                /*if (val && name.indexOf("__") === 0 && name!=="__construct") {
-                 throw new Error("Members that starts with __ can only be declared internally!");
-                 }*/
+                    // Call the original Constructor with the temp
+                    // instance as its context (i.e. its 'this' value)
+                    ret = __Object.apply(inst, arguments);
 
-                return __(name, val, attributes, retType, instance, true);
-            },
-            enumerable: true
-        });
+                    // If an object has been returned then return it otherwise
+                    // return the original instance.
+                    // (consistent with behaviour of the new operator)
+                    return Object(ret) === ret ? ret : inst;
+                },
+                enumerable: true
+            });
 
-        // private version
-        function __ (name, val, attributes, retType, instance, isPubCall) {
-            var res;
+            /**
+             * expose the static public members to call directly from an instantiated object
+             */
+            Object.defineProperty(__proto, "__st", {
+                value: __Object,
+                enumerable: true
+            });
 
-            if (typeof val !== "undefined") { // set                        
+            /**
+             * Inherit methods from another class ( such as traits )
+             */
+            Object.defineProperty(__proto, "__inherit", {value: function (src) {
+                    return __inherit(src, this, false);
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(__proto, "__addMembers", {value: function (elements) {
+                    __Object.__addMembers(elements, this, arguments[1]);
+                },
+                enumerable: true
+            });
+
+            /**
+             *
+             * @param {type} elements
+             * @param {type} instance (Optional) can be null if static member
+             * @returns {undefined}
+             */
+            Object.defineProperty(__Object, "__addMembers", {value: function (elements, instance) {
+                    var publicCall = true;
+                    // hidden argument for internal use
+                    if (arguments[2] !== undefined && arguments[2] instanceof __PvDelegator)
+                        publicCall = false;
+
+                    for (var i = 0; i < elements.length; ++i) {
+                        __define(elements[i]["name"] || elements[i]["n"],
+                            typeof elements[i]["val"] === "undefined" ? elements[i]["v"] : elements[i]["val"],
+                            elements[i]["attributes"] || elements[i]["a"],
+                            elements[i]["retType"] || elements[i]["r"],
+                            instance,
+                            publicCall);
+                    }
+                },
+                enumerable: true
+            });
+
+            /**
+             * Set a member to a defined Class, object or prototype
+             * @param {type} name
+             * @param {type} val
+             * @param {String} attributes
+             * public/private
+             * static If no instance provided, this parameter will be forced.
+             * final
+             * @param {String} retType 
+             * @param {type} instance -> will use instance instead of prototype with non static members
+             * @param {String} isPubCall 
+             * @returns Object
+             */
+            function __define (name, val, attributes, retType, instance, isPubCall) {
                 if (typeof attributes === "string")
                     attributes = attributes.split(" ");
 
                 // false if not specified, but if instance is not defined, it's forced to true
                 var isStatic = attributes ? attributes.indexOf("static") >= 0 : false;
 
-                if (__proto_st.__isStatic && !isStatic) {
+                if (__Object.__isStatic && !isStatic) {
                     throw new SyntaxError("You cannot add non-static members to a static class!");
                 }
 
                 var access = "public";
                 if (attributes) {
                     access = attributes.indexOf("protected") >= 0 ?
-                            "protected" :
-                            (attributes.indexOf("private") >= 0 ?
-                                    "private" : access);
+                        "protected" :
+                        (attributes.indexOf("private") >= 0 ?
+                            "private" : access);
                 }
 
 
@@ -356,101 +441,51 @@ hw2.define(function () {
                     throw new SyntaxError("abstract is not implemented yet! retry later/soon[tm]");
                 }
 
-                // if it's an instance variable, we've to delegate the definition to the constructor
-                if (!isStatic
-                        && access === "private"
-                        && !instance) {
-
-                    __pendingPvInst[name] = {"val": val, "attributes": attributes, "retType": retType};
+                // with properties that need an instantiated object , we've to delegate the definition to the constructor
+                if (!isStatic && !instance && (access === "private" || name === "__destruct")) {
+                    __pendingInst[name] = {"val": val, "attributes": attributes, "retType": retType};
                     return;
                 }
 
                 var obj;
-                if (access === "public" || access == "protected") {
-                    if (isStatic) {
-                        obj = __proto_st;
-                    } else if (typeof val === "function") {
-                        obj = __proto;
-                    } else {
-                        obj = instance || __proto;
-                    }
-                } else if (isStatic) {
-                    obj = __pvMembers.st;
-                } else {
-                    obj = __pvMembers.inst[instance.__("__id")];
+
+                switch (access) {
+                    case "public": // OR
+                    case "protected":
+                        if (isStatic) {
+                            obj = __Object;
+                        } else if (typeof val === "function") {
+                            obj = __proto;
+                        } else {
+                            obj = instance && instance.__root || __proto;
+                        }
+                        break;
+                    case "private":
+                        obj = isStatic && __staticMembers.priv || __instMembers.priv(instance.__root);
+                        break;
                 }
 
                 // store parent object to apply next
+                // we need to check both in public and in protected scopes
+                // private avoided because we cannot "override" it
+                // we need to check protected before 
                 var old = obj[name];
+
+                var getDescr = function (obj, name) {
+                    var proto = obj.prototype || obj.__proto__;
+                    return Object.getOwnPropertyDescriptor(obj, name)
+                        || (proto && Object.getOwnPropertyDescriptor(proto, name));
+                };
 
                 if (old) {
                     // check for final members
-                    var descr = Object.getOwnPropertyDescriptor(obj, name)
-                            || (obj.prototype && Object.getOwnPropertyDescriptor(obj.prototype, name));
+                    var descr = getDescr(obj, name);
+                    // we must check descr.set because if it's used then
+                    // it's a variable with getter/setter and the check is done internally
                     if (descr && descr.set === undefined && descr.writable !== true) {
                         throw new SyntaxError("Final member '" + name + "' cannot be overridden");
                     }
                 }
-
-                //var scope = null;
-
-                var value = typeof val !== "function" ?
-                        (function () {
-                            if (retType)
-                                $.typeCompare(retType, val);
-
-                            return val;
-                        })()
-                        :
-                        function () {
-                            //if (!scope) {
-                            var scope = {};
-
-
-                            scope.s = __proto_st.__scope === undefined ? __proto_st : __proto_st.__scope;
-
-                            scope._s = __pvMembers.st;
-
-                            scope._s.__scope = scope.s;
-
-                            // expose private variable to internal class function
-                            if (!isStatic) {
-                                scope.i = this.__scope === undefined ? this : this.__scope;
-
-                                // alternative this._i for traits
-                                scope._i = __pvMembers.inst[scope.i.__("__id")] || this._i;
-
-                                scope.__scope = scope._i.__scope = scope.i;
-                            } else {
-                                scope.__scope = scope.s;
-                            }
-
-                            // as scope for __super we pass the base class environment
-                            // TODO: however a check should be done when __super
-                            // calls a trait method since we need
-                            // current scope instead
-                            var sBind = isStatic ? __base : scope._i.__parent;
-                            Object.defineProperty(scope, "__super", {
-                                value: old ? old.bind(sBind) : null,
-                                writable: true,
-                                configurable: true,
-                                enumerable: true
-                            });
-
-                            // scope should be immutable
-                            //Object.freeze(scope);
-                            //}
-
-                            if (retType) {
-                                var res = val.apply(scope, arguments);
-
-                                $.typeCompare(retType, res);
-
-                                return res;
-                            } else {
-                                return val.apply(scope, arguments);
-                            }
-                        };
 
                 var descriptors = {
                     //__proto__: !isStatic ? obj.__proto__ : obj,
@@ -458,146 +493,149 @@ hw2.define(function () {
                     enumerable: access !== "protected"
                 };
 
-                if (access === "protected" || retType) {
-                    descriptors.get = function () {
-                        // check protected
-                        if (access === "protected"
-                                && this.__scope === undefined
-                                && this.__pvFlag !== undefined && !this.__pvFlag) {
-                            throw new Error("Exception trying to retrieve a protected member");
-                        }
+                if (typeof val !== "function" || val.__isClass) {
+                    if (!retType && access !== "protected") {
+                        descriptors.value = val;
+                        descriptors.writable = !isFinal;
+                    } else {
+                        descriptors.get = function getter () {
+                            access === "protected" && __assertAccess(this, this.__st || null); // it's the __proto of "this" object
 
-                        if (typeof value !== "function" && retType)
-                            $.typeCompare(retType, value);
+                            return val;
+                        };
 
-                        return value;
-                    };
+                        descriptors.set = function setter (newVal) {
+                            if (isFinal)
+                                return;
 
-                    descriptors.set = function (newVal) {
-                        if (isFinal)
-                            return;
+                            access === "protected" && __assertAccess(this, this.__st || null); // it's the __proto of "this" object
 
-                        // check if you're trying to set a new value
-                        // that doesn't respect the typehinting rule
-                        if (typeof value !== "function" && retType)
-                            $.typeCompare(retType, value);
+                            // check if you're trying to set a new value
+                            // that doesn't respect the typehinting rule
+                            retType && $.typeCompare(retType, newVal);
 
-                        return value = newVal;
-                    };
-                } else {
-                    descriptors.value = value;
-                    descriptors.writable = !isFinal;
-                }
+                            // redefine only getter
+                            descriptors.get = function () {
+                                access === "protected" && __assertAccess(this, this.__st || null);
+                                return newVal;
+                            };
 
-
-                res = Object.defineProperty(obj, name, descriptors);
-            } else { // get
-                if (!isPubCall) {
-                    res = instance ? __pvMembers.inst[instance.__("__id")][name] : __pvMembers.st[name];
-                }
-
-                if (!res)
-                    res = instance ? instance[name] : __proto_st[name];
-            }
-
-            return res;
-        }
-
-        var __inherit = function (src, dest, isBase) {
-            var extend = function (destination, source, isBase) {
-                for (var prop in source) {
-                    if (prop.indexOf("__") !== 0 // exclude Class magic methods
-                            && prop !== "prototype") {
-                        if (isBase) {
-                            destination[prop] = source[prop];
-                        } else {
-                            // traits don't have proper scope, so we must use 
-                            // destination as scoping object
-                            __(prop, source[prop], null, null, destination);
-                        }
+                            // defineProperty redefines the variable
+                            // on instance ( to avoid prototype modification )
+                            // and without "recalling" the setter
+                            Object.defineProperty(this, name, descriptors);
+                        };
                     }
-                }
-            };
-
-
-            if (isBase) {
-                if (src.__isFinal)
-                    throw Error("final class cannot be extended!");
-
-                extend(dest, src, true);
-
-                __base = src;
-            } else {
-                // traits
-                if (src instanceof Array) {
-                    src.forEach(function (t) {
-                        extend(dest, t, false);
-                        extend(dest.prototype, t.prototype, false);
-                    });
                 } else {
-                    extend(dest, src, false);
-                    extend(dest.prototype, src.prototype, false);
+                    descriptors.writable = !isFinal;
+
+                    //var scope = null;
+
+                    var wrapper = function () {
+                        var scope = {
+                            s: this.__stScope || __Object,
+                            _s: __staticMembers.priv,
+                        };
+
+                        // expose private variable to internal class function
+                        if (!isStatic) {
+                            scope.i = this.__root || this.__scope.__root;
+                            scope._i = __instMembers.priv(scope.i) || this._i /* alternative this._i for traits*/;
+
+                            scope.__scope = scope._i.__scope = scope.i;
+                        } else {
+                            scope.__stScope = scope.s;
+                        }
+
+                        // as scope for __super we pass the base class environment
+                        // TODO: however a check should be done when __super
+                        // calls a trait method since we need
+                        // current scope instead
+                        var sBind = isStatic ? __base : scope;
+                        Object.defineProperty(scope, "__super", {
+                            value: old ? old.bind(sBind) : null,
+                            writable: true,
+                            configurable: true,
+                            enumerable: true
+                        });
+
+                        Object.seal(scope); // this generates an error when we try to set something to scope object
+
+                        access === "protected" && __assertAccess(scope.i, scope.s);
+
+
+                        var prevCaller = __caller;
+                        __caller = wrapper;
+                        var r;
+                        try {
+                            r = val.apply(scope, arguments);
+                        }
+                        finally {
+                            __caller = prevCaller;
+                        }
+
+                        if (retType)
+                            $.typeCompare(retType, r);
+
+                        return r;
+                    };
+
+                    wrapper.__getWrappedMethod = function (d) {
+                        if (d instanceof __SharedDelegator) {
+                            return val;
+                        }
+                        throw "Error: only the wrapping function may access the wrapped method";
+                    };
+
+                    if (val.__getWrappedMethod) {
+                        val = val.__getWrappedMethod(new __SharedDelegator);
+                    }
+
+                    wrapper._name = name;
+
+                    // alias for static
+                    descriptors.value = wrapper;
+                }
+
+                return Object.defineProperty(obj, name, descriptors);
+            }
+
+            if (descriptor) {
+                if (descriptor.base) {
+                    //inherit static methods 
+                    __inherit(descriptor.base, __Object, true, __define);
+                }
+
+                // Traits
+                // must be a non-empty array or function
+                if (descriptor.use && (!Array.isArray(descriptor.use) || descriptor.use.length > 0))
+                    __inherit(descriptor.use, __Object, false, __define);
+
+                // finally add members
+                if (descriptor.members)
+                    __Object.__addMembers(descriptor.members, null, new __PvDelegator);
+
+                __Object.constructor = __constructor;
+
+                if (__Object.__isFinal) {
+                    //Object.preventExtensions(Obj);
+                    Object.seal(__Object);
+                }
+
+                /*
+                 * Create an object named by descriptor.class 
+                 * inside namespace if defined, otherwise inside "this" scope
+                 */
+                if (typeof descriptor.class === "string") {
+                    var clScope = descriptor.namespace || this;
+                    clScope[descriptor.class] = __Object;
                 }
             }
 
-        };
-
-        function __Delegator () {
+            return __Object;
         }
 
-
-        if (descriptor) {
-            if (descriptor.type && typeof descriptor.type === "string")
-                descriptor.type = descriptor.type.split(" ");
-
-            if (descriptor.type) {
-                if (descriptor.type.indexOf("abstract") >= 0)
-                    Object.defineProperty(__proto_st, "__isAbstract", {
-                        value: true,
-                        writable: false,
-                        configurable: false,
-                        enumerable: true
-                    });
-
-                if (descriptor.type.indexOf("static") >= 0) {
-                    Object.defineProperty(__proto_st, "__isStatic", {
-                        value: true,
-                        writable: false,
-                        configurable: false,
-                        enumerable: true
-                    });
-                }
-
-                if (descriptor.type.indexOf("final") >= 0) {
-                    Object.defineProperty(__proto_st, "__isFinal", {
-                        value: true,
-                        writable: false,
-                        configurable: false,
-                        enumerable: true
-                    });
-                }
-            }
-
-            if (descriptor.base) {
-                __inherit(descriptor.base, __proto_st, true);
-            }
-
-            if (descriptor.use)
-                __inherit(descriptor.use, __proto_st, false);
-
-            /*if (typeof descriptor.class === "string")
-             Hw2Core[descriptor.class] = Obj;*/
-
-            if (descriptor.members)
-                __proto_st.__addMembers(descriptor.members, null, new __Delegator);
-
-            if (__proto_st.__isFinal) {
-                //Object.preventExtensions(Obj);
-                Object.seal(__proto_st);
-            }
-        }
-
-        return __proto_st;
+        return new __Class();
     };
 });
 
