@@ -94,7 +94,7 @@
     <h4><b>Another simple example:</b></h4>
 
 
-    var Expr = $.public.class([
+    var Expr = $.public.class(
         $.protected({
             x: undefined,
             y: undefined
@@ -108,7 +108,7 @@
                 return this.i.x + this.i.y;
             })
         })
-    ]);
+    );
 
     console.log(new Expr(2, 2).sum()); // 4
 
