@@ -6,7 +6,7 @@
     },
     "devDependencies": {
         "%tests": "hw2-core/js-library-class#tests",
-        "%doc": "hw2-core/js-library-class#doc"
+        "%doc": "hw2-core/js-library-class#gh-pages"
     },
     "_comment_keep": "ensure we keep the right git repository configurations",
     "keep": [
