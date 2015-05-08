@@ -1,9 +1,23 @@
 <pre> 
 <h2> Basic Class Syntax </h2>
 
+   <h4> Note you can use a shorten version of members definitions that is the following:
+            {
+                // in order: 
+                // attributes, return type, property name, property value
+                a: "protected static", r: "string", n: "myFunc",v: function() { 
+                    return "sample string";
+                }
+            },
+            
+        But in following examples we will use the full syntax for a better understanding
+       
+
 <h3> How to create an abstract class: </h3>
 
-    var FirstName = Hw2Core.Class({
+    var $ = Hw2Core; // just an alias of Hw2Core
+
+    var FirstName = $.Class({
         <b>// specify class modifiers
         // it can also be a string separated by spaces: "public abstract"
         // NOTE: public could also be omitted in this case</b>
@@ -25,7 +39,7 @@
 
 <h3> How to create a final class: </h3>
 
-    var LastName = Hw2Core.Class({type: "final", members: [
+    var LastName = $.Class({type: "final", members: [
             {
                 name: "lastName",
                 val: "Bar",
@@ -47,7 +61,7 @@
 
 <h3> How to create a class that extends "FirstName" and use "LastName": </h3>
 
-    var MyName = Hw2Core.Class({
+    var MyName = $.Class({
         type: "final",
         base: FirstName,
         use: LastName, <b>// it can be also an array of classes</b>

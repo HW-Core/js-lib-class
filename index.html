@@ -4,23 +4,18 @@
 -->
 <html>
     <head>
-        <title>Hw2Core Js-Kernel Documentation</title>
+        <title>Hw2Core Js-Library Class Documentation</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type="text/css" href="styles/index.css">
         <script type="text/javascript">
-            if (document.location.hostname !== "localhost" && document.location.hostname !== "127.0.0.1")
+            if (document.location.hostname !== "localhost" && document.location.hostname !== "127.0.0.1") {
                 HW2PATH_ROOT = "http://hw2-core.github.io/";
-            else // for dev
-                HW2PATH_ROOT = "../../../../../../";
-
-            HW2_AFTERBOOT = "js/index.html.js";
-            var head = document.getElementsByTagName('head')[0];
-            var script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = HW2PATH_ROOT + 'hw2/modules/js/src/kernel/index.js';
-            head.appendChild(script);
+            } else { // for dev
+                HW2PATH_ROOT = "../../../../../../../";
+            }
         </script>
+        <script data-hw2-after-boot="js/index.html.js" src="../../../kernel/index.js"></script>
     </head>
     <body>
         <div id="main">
@@ -28,7 +23,7 @@
                 <header>
                     <img src="https://avatars0.githubusercontent.com/u/6638895?v=3&s=200"/>
                     <h1><a href="https://hw2-core.github.io">Hw2Core</a> -> 
-                        <a href="https://github.com/hw2-core/js-kernel">JS-Kernel</a> 
+                        <a href="https://github.com/hw2-core/js-library-class">JS-Library-Class</a> 
                         Documentation
                     </h1>
                 </header>
@@ -36,14 +31,13 @@
                     <ul id="left-menu-list">
                         <li><a class="nav-home" href="#home">Home</a></li>
                         <li><a class="nav-installation" href="#installation">Installation</a></li>
-                        <li><a class="nav-class" href="#class">Class</a>
+                        <li><a class="nav-getting-started" href="#getting-started">Getting started</a>
                             <ul>
                                 <li><a class="nav-class-basic" href="#class-basic">Class Basic</a></li>
                                 <li><a class="nav-class-friendly" href="#class-friendly">Class Friendly</a></li>
                             </ul>
                         </li>
-                        <li><a class="nav-loader" href="#loader">Loader</a></li>
-                        <li><a target="_blank" href="https://github.com/hw2-core/js-kernel">Repository</a></li>
+                        <li><a target="_blank" href="https://github.com/hw2-core/js-library-class">Repository</a></li>
                     </ul>
                 </div>
                 <div id="dyn-content">
@@ -52,7 +46,8 @@
                 <div id="clear"></div>
             </div>
             <footer>
-                <small>Copyright by <a target="_blank" href="http://www.hyperweb2.com/terms">Hyperweb2</a></small>
+                <small>Copyright by <a target="_blank" href="http://www.hyperweb2.com/terms">Hyperweb2</a>
+                - Documentation created with <a href="https://hw2-core.github.io">Hw2Core</a> framework</small> 
             </footer>
         </div>
     </body>
