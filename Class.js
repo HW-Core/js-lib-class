@@ -5,9 +5,9 @@
 
 'use strict';
 
-hw2.define([
+hw2.include([
     'hw2!{PATH_CORE}modules/js/modules/weakmap/index.js'
-], function () {
+]).define(function () {
     var $ = this;
 
     /*
@@ -38,15 +38,26 @@ hw2.define([
     // for static and traits
     function __inherit (src, dest, isBase, __define) {
         var extend = function (destination, source, isBase) {
-            for (var prop in source) {
-                if ((prop.indexOf("__") !== 0) // exclude Class magic methods
-                    && prop !== "prototype") {
+            var properties = isBase ? Object.getOwnPropertyNames(source) : source;
+
+            for (var prop in properties) {
+                var p = isBase ? properties[prop] : prop;
+
+                if ((p.indexOf("__") !== 0) // exclude Class magic methods
+                    && p !== "prototype") {
                     if (isBase) {
-                        destination[prop] = source[prop];
-                    } else { //[TODO] remove and test
+                        var d = Object.getOwnPropertyDescriptor(source, p);
+                        var dd=Object.getOwnPropertyDescriptor(destination, p);
+                        if (dd && dd.configurable == false) {
+                            // skip reserved properties
+                            continue;
+                        }
+
+                        Object.defineProperty(destination, p, d);
+                    } else {
                         // traits don't have proper scope, so we must use 
                         // destination as scoping object
-                        __define(prop, source[prop], null, null, destination);
+                        __define(p, source[p], null, null, destination);
                     }
                 }
             }
@@ -54,6 +65,8 @@ hw2.define([
 
         if (isBase) {
             extend(dest, src, true);
+
+            __define("__parent", src, "private static final", null, dest);
         } else {
             // traits
             if (src instanceof Array) {
@@ -118,67 +131,79 @@ hw2.define([
             priv: {}
         };
 
-        var __pendingInst = [];
-        // default destruct, will be overwritten from user defined
-        __pendingInst["__destruct"] = {
-            val: function () {
-            },
-            attributes: ["public"]
-        };
+        var __pendingInst = {};
 
         function __Class () {
             function __PvDelegator () {
             }
 
-            function __Object () {
-                return __constructor(this, arguments);
-            }
-
+            var __Object = null;
             var __base = null;
 
-            /**
-             * Extends base ( prototype only, static methods are inherited below )
-             */
-            if (descriptor) {
-                if (descriptor.type && typeof descriptor.type === "string")
-                    descriptor.type = descriptor.type.split(" ");
+            if (typeof descriptor == "function") {
+                // if descriptor is a function then we're wrapping an non-framework "class"
+                __Object = descriptor;
 
-                if (descriptor.type) {
-                    if (descriptor.type.indexOf("abstract") >= 0)
-                        Object.defineProperty(__Object, "__isAbstract", {
-                            value: true,
-                            writable: false,
-                            configurable: false,
-                            enumerable: true
-                        });
+                __Object.constructor = function () {
+                    return __constructor(this, arguments);
+                };
+            } else {
 
-                    if (descriptor.type.indexOf("static") >= 0) {
-                        Object.defineProperty(__Object, "__isStatic", {
-                            value: true,
-                            writable: false,
-                            configurable: false,
-                            enumerable: true
-                        });
+                __Object = function () {
+                    return __constructor(this, arguments);
+                };
+
+                /**
+                 * Extends base ( prototype only, static methods are inherited below )
+                 */
+                if (descriptor) {
+                    if (descriptor.type && typeof descriptor.type === "string")
+                        descriptor.type = descriptor.type.split(" ");
+
+                    if (descriptor.type) {
+                        if (descriptor.type.indexOf("abstract") >= 0)
+                            Object.defineProperty(__Object, "__isAbstract", {
+                                value: true,
+                                writable: false,
+                                configurable: false,
+                                enumerable: true
+                            });
+
+                        if (descriptor.type.indexOf("static") >= 0) {
+                            Object.defineProperty(__Object, "__isStatic", {
+                                value: true,
+                                writable: false,
+                                configurable: false,
+                                enumerable: true
+                            });
+                        }
+
+                        if (descriptor.type.indexOf("final") >= 0) {
+                            Object.defineProperty(__Object, "__isFinal", {
+                                value: true,
+                                writable: false,
+                                configurable: false,
+                                enumerable: true
+                            });
+                        }
                     }
 
-                    if (descriptor.type.indexOf("final") >= 0) {
-                        Object.defineProperty(__Object, "__isFinal", {
-                            value: true,
-                            writable: false,
-                            configurable: false,
-                            enumerable: true
-                        });
+
+                    if (descriptor.base) {
+                        if (typeof descriptor.base != "function")
+                            throw new Error("Not valid class to extends!");
+
+                        // if you are extending a "native class" then wrap it before
+                        if (!descriptor.base.__isClass)
+                            descriptor.base = $.Class(descriptor.base);
+
+                        if (descriptor.base.__isFinal)
+                            throw Error("final class cannot be extended!");
+
+                        __Object.prototype = Object.create(descriptor.base.prototype);
+
+                        __base = descriptor.base;
                     }
-                }
-
-
-                if (descriptor.base) {
-                    if (descriptor.base.__isFinal)
-                        throw Error("final class cannot be extended!");
-
-                    __Object.prototype = Object.create(descriptor.base.prototype);
-
-                    __base = descriptor.base;
                 }
             }
 
@@ -193,7 +218,7 @@ hw2.define([
              * Destroy the object ( private method )
              */
             function __destructor () {
-                this.__proto__ = null;
+                //delete this.__proto__;
 
                 // destroy the rest of chain
                 this.__parent && this.__parent.__destructor();
@@ -205,14 +230,6 @@ hw2.define([
                 var isPvCall = __caller != null;
 
                 var absInit = false;
-                if (__Object.__isAbstract) {
-                    // if also the "root" object is abstract, then throw an error
-                    if (scope.__st.__isAbstract) {
-                        throw new Error('Abstract class may not be constructed');
-                    } else {
-                        absInit = true;
-                    }
-                }
 
                 if (__Object.__isStatic) {
                     throw new Error('Static class may not be instantiated');
@@ -223,42 +240,71 @@ hw2.define([
                     var obj = scope.__root;
                 } else {
                     var obj = Object.create(__proto);
-                    scope.__root = scope; // store the root scope
+                    scope.__root = obj; // store the root scope
+                }
+
+                if (__Object.__isAbstract) {
+                    // if also the "root" object is abstract, then throw an error
+                    if (scope.__root.__st.__isAbstract) {
+                        throw new Error('Abstract class may not be constructed');
+                    } else {
+                        absInit = true;
+                    }
                 }
 
                 obj.__root = scope.__root;
+
+                var destructor = null;
 
                 for (var prop in __pendingInst) {
                     var m = __pendingInst[prop];
 
                     // check for private constructor
-                    if (prop === "__construct" && m.attributes.indexOf("private") >= 0 && !isPvCall)
-                        throw new Error('Class with private constructor may not be instantiated');
-
-                    if (prop === "__destruct") {
-                        // destruct workflow must be defined during
-                        // instance building
-                        var d = m.val;
-                        var dt = function () {
-                            d && d.call(obj);
-                            // after __destruct methods are casted
-                            // we need to call the private one
-                            __destructor.call(obj);
-                        };
-                        // duck punching __destruct
-                        m.val = dt;
+                    switch (prop) {
+                        case "__construct":
+                            if (m.attributes.indexOf("private") >= 0 && !isPvCall)
+                                throw new Error('Class with private constructor may not be instantiated');
+                            break;
+                        case "__destruct":
+                            destructor = m;
+                            continue;
                     }
 
                     __define(prop, m.val, m.attributes, m.retType, obj);
                 }
 
-                obj.__pvFlag = isPvCall;
                 // also base must be instantiated
                 if (__base) {
-                    __define("__parent", __base.apply(obj, args), "private final", null, obj);
+                    __define("__parent", __base.apply({__pvFlag: true, __root: obj.__root}, args),
+                        "private final", null, obj);
                 }
 
-                delete obj.__pvFlag;
+                /**
+                 * define destructor
+                 */
+                if (!obj["__destruct"] || destructor) {
+                    destructor || (destructor = {
+                        val: function () {
+                        },
+                        attributes: ["public"]
+                    });
+
+                    // destruct workflow must be defined during
+                    // instance building
+                    var d = destructor.val;
+                    var dt = function () {
+                        d && d.call(this);
+                        // after __destruct methods are casted
+                        // we need to call the private one
+                        __destructor.call(this);
+                    };
+                    // duck punching __destruct
+                    __define("__destruct", dt, destructor.attributes, destructor.retType, obj);
+                }
+
+                /*
+                 * Constructor
+                 */
 
                 var constructor = obj["__construct"] || (isPvCall ? __instMembers.priv(obj.__root)["__construct"] : undefined);
                 // check __pvFlag to avoid calling parent constructor
@@ -498,9 +544,20 @@ hw2.define([
                         descriptors.value = val;
                         descriptors.writable = !isFinal;
                     } else {
-                        descriptors.get = function getter () {
-                            access === "protected" && __assertAccess(this, this.__st || null); // it's the __proto of "this" object
+                        var checkAccess = function () {
+                            var scope, alt;
+                            if (isStatic) {
+                                scope = __proto;
+                                alt = this;
+                            } else {
+                                scope = this;
+                                alt = this.__st;
+                            }
+                            access === "protected" && __assertAccess(scope, alt);
+                        };
 
+                        descriptors.get = function getter () {
+                            checkAccess.call(this);
                             return val;
                         };
 
@@ -508,7 +565,7 @@ hw2.define([
                             if (isFinal)
                                 return;
 
-                            access === "protected" && __assertAccess(this, this.__st || null); // it's the __proto of "this" object
+                            checkAccess.call(this);
 
                             // check if you're trying to set a new value
                             // that doesn't respect the typehinting rule
@@ -516,7 +573,7 @@ hw2.define([
 
                             // redefine only getter
                             descriptors.get = function () {
-                                access === "protected" && __assertAccess(this, this.__st || null);
+                                checkAccess.call(this);
                                 return newVal;
                             };
 
@@ -530,11 +587,13 @@ hw2.define([
                     descriptors.writable = !isFinal;
 
                     //var scope = null;
+                    if (name === "__parent")
+                        debugger;
 
                     var wrapper = function () {
                         var scope = {
                             s: this.__stScope || __Object,
-                            _s: __staticMembers.priv,
+                            _s: __staticMembers.priv
                         };
 
                         // expose private variable to internal class function
@@ -561,7 +620,7 @@ hw2.define([
 
                         Object.seal(scope); // this generates an error when we try to set something to scope object
 
-                        access === "protected" && __assertAccess(scope.i, scope.s);
+                        access === "protected" && __assertAccess(scope.i || __proto, scope.s);
 
 
                         var prevCaller = __caller;
@@ -601,34 +660,40 @@ hw2.define([
             }
 
             if (descriptor) {
-                if (descriptor.base) {
-                    //inherit static methods 
-                    __inherit(descriptor.base, __Object, true, __define);
-                }
 
-                // Traits
-                // must be a non-empty array or function
-                if (descriptor.use && (!Array.isArray(descriptor.use) || descriptor.use.length > 0))
-                    __inherit(descriptor.use, __Object, false, __define);
+                if (typeof descriptor == "function") {
+                    // for wrapped class we've just to define the constructor
+                    __define("__construct", descriptor, ["public"]);
+                } else {
+                    if (descriptor.base) {
+                        //inherit static methods 
+                        __inherit(descriptor.base, __Object, true, __define);
+                    }
 
-                // finally add members
-                if (descriptor.members)
-                    __Object.__addMembers(descriptor.members, null, new __PvDelegator);
+                    // Traits
+                    // must be a non-empty array or function
+                    if (descriptor.use && (!Array.isArray(descriptor.use) || descriptor.use.length > 0))
+                        __inherit(descriptor.use, __Object, false, __define);
 
-                __Object.constructor = __constructor;
+                    // finally add members
+                    if (descriptor.members)
+                        __Object.__addMembers(descriptor.members, null, new __PvDelegator);
 
-                if (__Object.__isFinal) {
-                    //Object.preventExtensions(Obj);
-                    Object.seal(__Object);
-                }
+                    __Object.constructor = __constructor;
 
-                /*
-                 * Create an object named by descriptor.class 
-                 * inside namespace if defined, otherwise inside "this" scope
-                 */
-                if (typeof descriptor.class === "string") {
-                    var clScope = descriptor.namespace || this;
-                    clScope[descriptor.class] = __Object;
+                    if (__Object.__isFinal) {
+                        //Object.preventExtensions(Obj);
+                        Object.seal(__Object);
+                    }
+
+                    /*
+                     * Create an object named by descriptor.class 
+                     * inside namespace if defined, otherwise inside "this" scope
+                     */
+                    if (typeof descriptor.class === "string") {
+                        var clScope = descriptor.namespace || this;
+                        clScope[descriptor.class] = __Object;
+                    }
                 }
             }
 
