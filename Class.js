@@ -36,50 +36,44 @@ hw2.include([
     }
 
     // for static and traits
-    function __inherit (src, dest, isBase, __define) {
-        var extend = function (destination, source, isBase) {
-            var properties = isBase ? Object.getOwnPropertyNames(source) : source;
-
+    function __inherit (src, dest, staticOnly, __define) {
+        var extend = function (destination, source, extendsStatic) {
+            var properties = extendsStatic ? Object.getOwnPropertyNames(source) : source;
+            var isClass = source.__isClass;
             for (var prop in properties) {
-                var p = isBase ? properties[prop] : prop;
+                var p = extendsStatic ? properties[prop] : prop;
 
-                if ((p.indexOf("__") !== 0) // exclude Class magic methods
+                if ((!isClass || p.indexOf("__") !== 0) // exclude Class magic methods
                     && p !== "prototype") {
-                    if (isBase) {
+
+                    if (extendsStatic) {
                         var d = Object.getOwnPropertyDescriptor(source, p);
-                        var dd=Object.getOwnPropertyDescriptor(destination, p);
-                        if (dd && dd.configurable == false) {
-                            // skip reserved properties
-                            continue;
-                        }
+                        var dd = Object.getOwnPropertyDescriptor(destination, p);
+                        if (dd && dd.configurable == false)
+                            continue; // skip reserved properties
 
                         Object.defineProperty(destination, p, d);
                     } else {
-                        // traits don't have proper scope, so we must use 
-                        // destination as scoping object
-                        __define(p, source[p], null, null, destination);
+                        var d = Object.getPropertyDescriptor(source, p);
+                        var dd = Object.getPropertyDescriptor(destination, p);
+                        if (dd && dd.configurable == false)
+                            continue; // skip reserved propertiess
+
+                        var v = d.get || d.value;
+                        if (v.getInfo) {
+                            var info = v.getInfo();
+                            __define(p, source[p], info.attributes, info.retType, destination);
+                        } else {
+                            __define(p, source[p], null, null, destination);
+                        }
                     }
                 }
             }
         };
 
-        if (isBase) {
-            extend(dest, src, true);
-
-            __define("__parent", src, "private static final", null, dest);
-        } else {
-            // traits
-            if (src instanceof Array) {
-                src.forEach(function (t) {
-                    extend(dest, t, false);
-                    extend(dest.prototype, t.prototype, false);
-                });
-            } else {
-                extend(dest, src, false);
-                extend(dest.prototype, src.prototype, false);
-            }
-        }
-
+        extend(dest, src, true);
+        if (!staticOnly)
+            extend(dest.prototype, src.prototype, false);
     }
 
     var __caller = null;
@@ -97,8 +91,7 @@ hw2.include([
             return false;
         }
 
-        // Implemented methods have an _name property set.
-        var name = __caller._name;
+        var name = __caller.getInfo().name;
 
         var prop = (scope && name in scope && scope[name]) || (alt && name in alt && alt[name]);
 
@@ -125,6 +118,8 @@ hw2.include([
      * @returns {_Class}
      */
     $.Class = function (descriptor) {
+
+        var __membersList = [];
 
         // static "hard" map
         var __staticMembers = {
@@ -161,13 +156,14 @@ hw2.include([
                         descriptor.type = descriptor.type.split(" ");
 
                     if (descriptor.type) {
-                        if (descriptor.type.indexOf("abstract") >= 0)
+                        if (descriptor.type.indexOf("abstract") >= 0) {
                             Object.defineProperty(__Object, "__isAbstract", {
                                 value: true,
                                 writable: false,
                                 configurable: false,
                                 enumerable: true
                             });
+                        }
 
                         if (descriptor.type.indexOf("static") >= 0) {
                             Object.defineProperty(__Object, "__isStatic", {
@@ -315,7 +311,7 @@ hw2.include([
                     }
                 }
 
-                if (__Object.__isFinal) {
+                if (!scope.__isTrait && __Object.__isFinal) {
                     //Object.preventExtensions(Obj);
                     Object.seal(obj);
                 }
@@ -352,25 +348,6 @@ hw2.include([
                 enumerable: true
             });
 
-            Object.defineProperty(__Object, "__getProtected", {value: function () {
-                    var publicCall = true;
-                    // hidden argument for internal use
-                    if (arguments[0] !== undefined && arguments[0] instanceof __Delegator)
-                        publicCall = false;
-
-                    for (var i = 0; i < elements.length; ++i) {
-                        __define(elements[i]["name"] || elements[i]["n"],
-                            typeof elements[i]["val"] === "undefined" ? elements[i]["v"] : elements[i]["val"],
-                            elements[i]["attributes"] || elements[i]["a"],
-                            elements[i]["retType"] || elements[i]["r"],
-                            instance,
-                            publicCall);
-                    }
-                },
-                enumerable: true
-            });
-
-
             Object.defineProperty(__Object, "__createInstance", {value: function () {
                     var Temp = function () {
                     }, inst, ret; // other vars
@@ -405,7 +382,18 @@ hw2.include([
              * Inherit methods from another class ( such as traits )
              */
             Object.defineProperty(__proto, "__inherit", {value: function (src) {
-                    return __inherit(src, this, false);
+                    return __inherit(src, this, false, __define);
+                },
+                enumerable: true
+            });
+
+            Object.defineProperty(__Object, "__getMembers", {value: function () {
+                    var members = [];
+                    if (__Object.__parent)
+                        members = __Object.__parent.__getMembers();
+
+                    members = members.concat(__membersList);
+                    return members;
                 },
                 enumerable: true
             });
@@ -454,6 +442,15 @@ hw2.include([
              * @returns Object
              */
             function __define (name, val, attributes, retType, instance, isPubCall) {
+                if (!instance) {
+                    __membersList.push({
+                        name: name,
+                        val: val,
+                        attributes: attributes,
+                        retType: retType
+                    });
+                }
+
                 if (typeof attributes === "string")
                     attributes = attributes.split(" ");
 
@@ -523,6 +520,14 @@ hw2.include([
                         || (proto && Object.getOwnPropertyDescriptor(proto, name));
                 };
 
+                var getInfo = function () {
+                    return Object.freeze({
+                        name: name,
+                        retType: retType,
+                        attributes: attributes
+                    });
+                };
+
                 if (old) {
                     // check for final members
                     var descr = getDescr(obj, name);
@@ -556,10 +561,18 @@ hw2.include([
                             access === "protected" && __assertAccess(scope, alt);
                         };
 
-                        descriptors.get = function getter () {
-                            checkAccess.call(this);
-                            return val;
+                        var createGetter = function (val) {
+                            function getter () {
+                                checkAccess.call(this);
+                                return val;
+                            }
+
+                            getter.getInfo = getInfo;
+
+                            return getter;
                         };
+
+                        descriptors.get = createGetter(val);
 
                         descriptors.set = function setter (newVal) {
                             if (isFinal)
@@ -572,10 +585,7 @@ hw2.include([
                             retType && $.typeCompare(retType, newVal);
 
                             // redefine only getter
-                            descriptors.get = function () {
-                                checkAccess.call(this);
-                                return newVal;
-                            };
+                            descriptors.get = createGetter(newVal);
 
                             // defineProperty redefines the variable
                             // on instance ( to avoid prototype modification )
@@ -607,9 +617,6 @@ hw2.include([
                         }
 
                         // as scope for __super we pass the base class environment
-                        // TODO: however a check should be done when __super
-                        // calls a trait method since we need
-                        // current scope instead
                         var sBind = isStatic ? __base : scope;
                         Object.defineProperty(scope, "__super", {
                             value: old ? old.bind(sBind) : null,
@@ -650,7 +657,8 @@ hw2.include([
                         val = val.__getWrappedMethod(new __SharedDelegator);
                     }
 
-                    wrapper._name = name;
+                    // store some static informations for wrapper
+                    wrapper.getInfo = getInfo;
 
                     // alias for static
                     descriptors.value = wrapper;
@@ -668,12 +676,29 @@ hw2.include([
                     if (descriptor.base) {
                         //inherit static methods 
                         __inherit(descriptor.base, __Object, true, __define);
+                        __define("__parent", descriptor.base, "private static final", null, __Object);
                     }
 
                     // Traits
                     // must be a non-empty array or function
-                    if (descriptor.use && (!Array.isArray(descriptor.use) || descriptor.use.length > 0))
-                        __inherit(descriptor.use, __Object, false, __define);
+                    if (descriptor.use) {
+                        if (!Array.isArray(descriptor.use)) {
+                            descriptor.use = [descriptor.use];
+                        }
+
+                        if (!descriptor.use.length <= 0) {
+                            descriptor.use.forEach(function (t) {
+                                if (t.__getMembers) {
+                                    // if it's a "Class"
+                                    var members = t.__getMembers();
+                                    __Object.__addMembers(members, null, new __PvDelegator);
+                                } else {
+                                    // otherwise try to inherit native public members
+                                    __inherit(t, __Object, false, __define);
+                                }
+                            });
+                        }
+                    }
 
                     // finally add members
                     if (descriptor.members)
