@@ -35,7 +35,6 @@ hw2.include([
         };
     }
 
-    // for static and traits
     function __inherit (src, dest, staticOnly, __define) {
         var extend = function (destination, source, extendsStatic) {
             var properties = extendsStatic ? Object.getOwnPropertyNames(source) : source;
@@ -311,7 +310,7 @@ hw2.include([
                     }
                 }
 
-                if (!scope.__isTrait && __Object.__isFinal) {
+                if (__Object.__isFinal) {
                     //Object.preventExtensions(Obj);
                     Object.seal(obj);
                 }
@@ -609,7 +608,7 @@ hw2.include([
                         // expose private variable to internal class function
                         if (!isStatic) {
                             scope.i = this.__root || this.__scope.__root;
-                            scope._i = __instMembers.priv(scope.i) || this._i /* alternative this._i for traits*/;
+                            scope._i = __instMembers.priv(scope.i);
 
                             scope.__scope = scope._i.__scope = scope.i;
                         } else {
