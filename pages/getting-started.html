@@ -2,22 +2,21 @@
 <span>
 == <a href="https://github.com/hw2-core/js-library-class/blob/master/Class.js" target="_blank">Class</a> ==
 
-<h3>Getting started: </h3>
+<details><summary><h3>Getting started</h3></summary>
+    First of all, you've to configure your environment to run Hw2Core framework ( take a look at kernel <a href="https://github.com/hw2-core/js-kernel">documentation</a> )
 
-First of all, you've to configure your environment to run Hw2Core framework ( take a look at kernel <a href="https://github.com/hw2-core/js-kernel">documentation</a> )
+    Now, there are 2 ways to define a class:
 
-Now, there are 2 ways to define a class:
+    <a class="nav-class-basic" href="#class-basic">Basic syntax</a> ( faster performance but verbose and a little more complex )
 
-<a class="nav-class-basic" href="#class-basic">Basic syntax</a> ( faster performance but verbose and a little more complex )
+    <a class="nav-class-friendly" href="#class-friendly">Friendly syntax</a> ( slower performance but less verbose and very friendly )
 
-<a class="nav-class-friendly" href="#class-friendly">Friendly syntax</a> ( slower performance but less verbose and very friendly )
+    This is an example using friendly syntax. Use links above for more details.  
 
-This is an example using friendly syntax. Use links above for more details.  
+    <img style='width:100%;' border="1" alt="Code" src="https://lh4.googleusercontent.com/-Aq5KBz3V5f8/VH4u116weHI/AAAAAAAAAeQ/jch0BxfyEzU/w901-h692-no/js-class-typehint.png"/>
+</details>
 
-<img style='width:100%;' border="1" alt="Code" src="https://lh4.googleusercontent.com/-Aq5KBz3V5f8/VH4u116weHI/AAAAAAAAAeQ/jch0BxfyEzU/w901-h692-no/js-class-typehint.png"/>
-
-
-<h3>Current supported features are:</h3>
+<details><summary><h3>Current supported features</h3></summary>
 <ul>
     <li>Abstract class: Cannot be instantiated</li>
     <li>Static class: A class that has only static members and cannot be instantiated</li>
@@ -39,8 +38,9 @@ This is an example using friendly syntax. Use links above for more details.
     <li>Final members: its value cannot be changed</li>
     <li>Type-hinted members</li>
 </ul>
+</details>
 
-<h3>Work in progress features:</h3>
+<details><summary><h3>Work in progress features</h3></summary>
 <ul>
     <li>Abstract methods</li>
     <li>methods override</li>
@@ -48,9 +48,9 @@ This is an example using friendly syntax. Use links above for more details.
     <li>Friend class: <a href="http://en.wikipedia.org/wiki/Friend_class" target="_blank">wikipedia</a></li>
     <li>Interfaces and templates to consider</li>
 </ul>
+</details>
 
-
-<h3>Reserved words and "magic" methods</h3>
+<details><summary><h3>Reserved words and "magic" methods</h3></summary>
 
 All magic methods starts with __ prefix, so don't use this prefix for your variables name
 
@@ -64,7 +64,7 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
     <li>__inherit</li>
     <li>__addMembers</li>
 </ul>
-<b> Class public static methods:</b>
+<b> Class public static methods</b>
 <ul>
     <li>__isClass</li>
     <li>__getBase</li>
@@ -76,7 +76,7 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
     <li>__isFinal</li>
 </ul>
 
-<b> Class methods scope reserved variables:</b>
+<b> Class methods scope reserved variables</b>
 <ul>
     <li>this.i : to access public/protected instance members</li>
     <li>this.s : to access public/protected static members</li>
@@ -85,11 +85,13 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
     <li>this.__super : to call parent method</li>
     <li>this.__scope : the scope of function, internally used</li>
 </ul>
+</details>
 
-<h3>Some class examples can be found here:</h3>
+<details><summary><h3>Some class examples can be found here:</h3></summary>
 <ul><li><a href="https://github.com/hw2-core/js-library-class/tree/gh-pages/samples" target="_blank">Sample files</a></li>
     <li><a href="https://github.com/hw2-core/js-library-class/blob/tests/tests/class.js" target="_blank">Test file</a></li>
 </ul>
+</details>
 
 </span>
 </pre>
