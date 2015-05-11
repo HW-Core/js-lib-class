@@ -46,18 +46,42 @@ hw2.defTests(function () {
 
         var Trait = $.Class({type: "final", members: [
                 {
-                    attributes: "protected", name: "__construct", val: function () {
+                    a: "private", r: "Number", n: "intVal", v: 3
+                },
+                {
+                    a: "protected", n: "__construct", v: function () {
                         //return this.__super();
                     }
                 },
                 {
-                    attributes: "public static", name: "getInstance", val: function () {
+                    a: "public static", n: "getInstance", v: function () {
                         return new this.s();
                     }
                 },
                 {
-                    name: "test2", val: function () {
+                    n: "test2", v: function () {
                         return "t2-trait+" + this._i.privVar;
+                    }
+                },
+                {
+                    n: "getIntVal", v: function () {
+                        return this._i.intVal;
+                    }
+                }
+            ]});
+
+        var Trait2 = $.Class({type: "final", members: [
+                {
+                    a: "private", r: "Number", n: "intVal", v: 4
+                },
+                {
+                    n: "getIntVal", v: function () {
+                        return this._i.intVal;
+                    }
+                },
+                {
+                    n: "getStringVal", r: "string", v: function () {
+                        return "this is a string";
                     }
                 }
             ]});
@@ -120,7 +144,7 @@ hw2.defTests(function () {
         var toDestroy = {};
 
         // CREATE A FULL CLASS
-        var FullCl = $.Class({base: AbstractCl, use: [FinalCl, Trait], members: [
+        var FullCl = $.Class({base: AbstractCl, use: [FinalCl, Trait, Trait2], members: [
                 {
                     name: "__construct",
                     val: function () {
@@ -361,6 +385,79 @@ hw2.defTests(function () {
             })
         ]);
 
+
+        var Name = $.public.abstract.class(
+            $.private({
+                name: null
+            }),
+            $.public({
+                getName: function () {
+                    return this._i.name;
+                },
+                setName: function (name) {
+                    this._i.name = name;
+                }
+            })
+            );
+
+        // classes from documentation
+        var LastName = $.public.final.class.extends(Name)(
+            // short-style using args instead of object when only 
+            // one method is going to be defined
+
+            $.private("lastName", $.typeHint("string", "Bar")),
+            // if you have multiple members with same accessors
+            // you can define them passing an object
+
+            $.public({
+                "String getLastName": function () {
+                    return this.i.getName();
+                },
+                setLastName: function (lName) {
+                    return this.i.setName(lName);
+                }
+            })
+            );
+
+        var FirstName = $.public.abstract.class.extends(Name)(
+            $.protected({firstName: "Foo"}), // it is visible from this class and its childs
+
+
+            $.public("getFirstName", function () {
+                return this.i.firstName;
+            })
+            );
+
+        // use LastName class as a "trait" and extends FirstName
+        var MyName = $.public.final.class.extends(FirstName).use(LastName)(
+            //$.private("lastName", "Bar"),
+
+            // multiple member declaration under same public accessor ( C/C++ style )
+            $.public({
+                __construct: function (firstName, lastName, nickName) {
+                    this.i.firstName = firstName;
+                    this.i.setLastName(lastName);
+                    this._s.nickName = nickName;
+                },
+                // override method of "FirstName" class to add nickname too
+                getFirstName: function () {
+                    // use magic "__super" to access parent method
+                    return this.__super() + " ( " + this._s.nickName + " )";
+                }
+            }),
+            // override method of "LastName" trait
+            $.public("getLastName", function () {
+                return "My last name is: " + this.__super();
+            }),
+            // it's the type-hinting , you can force data-type for this var
+            $.private.static("nickName", $.typeHint("string", "baz")),
+            // Another way to define type-hint, compatible with multiple members declaration
+            $.protected.final({"Date birthDay": new Date('December 17,1990 03:24:00')}),
+            // Yet Another way to define type-hint using parameters ( only for single-member declaration)
+            $.public.static(String, "getNickName", function () {
+                return this._s.nickName;
+            }));
+
         // RUN TESTS
 
         describe('constructor', function () {
@@ -445,6 +542,7 @@ hw2.defTests(function () {
                 var c = new FullCl();
                 assert.instanceOf(c, AbstractCl, "FullCl is an instance of AbstractCl");
                 assert.notInstanceOf(c, FinalCl, "FullCl isn't an instance of FinalCl");
+                console.log(c.test2());
                 assert.ok(c.test2() === "t2-trait+true", "Trait.test2 should override Final.test2 because of LIFO ordering");
             });
         });
@@ -569,80 +667,8 @@ hw2.defTests(function () {
             });
         });
 
-        describe('test friendly-style class of documentation', function () {
+        describe('test some friendly-style class', function () {
             it("we shouldn't have any exception in declaration, definition and instantiation", function () {
-                var Name = $.public.abstract.class(
-                    $.private({
-                        name: null
-                    }),
-                    $.public({
-                        getName: function () {
-                            return this._i.name;
-                        },
-                        setName: function (name) {
-                            this._i.name = name;
-                        }
-                    })
-                    );
-
-                // classes from documentation
-                var LastName = $.public.final.class.extends(Name)(
-                    // short-style using args instead of object when only 
-                    // one method is going to be defined
-
-                    $.private("lastName", "Bar"),
-                    // if you have multiple members with same accessors
-                    // you can define them passing an object
-
-                    $.public({
-                        getLastName: function () {
-                            return this.i.getName();
-                        },
-                        setLastName: function (lName) {
-                            return this.i.setName(lName);
-                        }
-                    })
-                    );
-
-                var FirstName = $.public.abstract.class.extends(Name)(
-                    $.protected({firstName: "Foo"}), // it is visible from this class and its childs
-
-
-                    $.public("getFirstName", function () {
-                        return this.i.firstName;
-                    })
-                    );
-
-                // use LastName class as a "trait" and extends FirstName
-                var MyName = $.public.final.class.extends(FirstName).use(LastName)(
-                    //$.private("lastName", "Bar"),
-
-                    // multiple member declaration under same public accessor ( C/C++ style )
-                    $.public({
-                        __construct: function (firstName, lastName, nickName) {
-                            this.i.firstName = firstName;
-                            this.i.setLastName(lastName);
-                            this._s.nickName = nickName;
-                        },
-                        // override method of "FirstName" class to add nickname too
-                        getFirstName: function () {
-                            // use magic "__super" to access parent method
-                            return this.__super() + " ( " + this._s.nickName + " )";
-                        }
-                    }),
-                    // override method of "LastName" trait
-                    $.public("getLastName", function () {
-                        return "My last name is: " + this.__super();
-                    }),
-                    // it's the type-hinting , you can force data-type for this var
-                    $.private.static("nickName", $.typeHint("string", "baz")),
-                    // Another way to define type-hint, compatible with multiple members declaration
-                    $.protected.final({"Date birthDay": new Date('December 17,1990 03:24:00')}),
-                    // Yet Another way to define type-hint using parameters ( only for single-member declaration)
-                    $.public.static(String, "getNickName", function () {
-                        return this._s.nickName;
-                    }));
-
                 var myName = new MyName("Hello", "World", "I'm a Class");
 
                 var myFirstName = myName.getFirstName();
@@ -650,6 +676,28 @@ hw2.defTests(function () {
                 assert.ok(myName.getName() === "World", "myName.getName() returns uncorrect value");
                 assert.ok(myFirstName === "Hello ( I'm a Class )", "myFirstName contains uncorrect value");
                 assert.ok(myName.getLastName() === "My last name is: World", "myName.getLastName() returns uncorrect value");
+            });
+        });
+
+        describe('some deeper Trait tests', function () {
+            it('should call trait methods without errors', function () {
+                var cl = new FullCl();
+                assert.ok(cl.getStringVal() == "this is a string", "should return the correct string");
+                assert.ok(cl.getIntVal() == 4, "should return 4");
+            });
+        });
+
+        describe('test typeHint feature', function () {
+            it('should correctly handle type-hinting', function () {
+                assert.throw(function () {
+                    new NumericCl("a", "b");
+                }, Error, "Incompatible type: string , excepted Number");
+
+                var myName = new MyName("Hello", "World", "I'm a Class");
+                assert.throw(function () {
+                    myName.setLastName(1);
+                    myName.getLastName();
+                }, Error, "Incompatible type: number , excepted String");
             });
         });
     });
