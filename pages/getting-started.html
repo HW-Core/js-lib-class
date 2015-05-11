@@ -1,6 +1,6 @@
 <pre>
 <span>
-== <a href="https://github.com/hw2-core/js-library-class/blob/master/Class.js">Class</a> ==
+== <a href="https://github.com/hw2-core/js-library-class/blob/master/Class.js" target="_blank">Class</a> ==
 
 <h3>Getting started: </h3>
 
@@ -45,10 +45,9 @@ This is an example using friendly syntax. Use links above for more details.
     <li>Abstract methods</li>
     <li>methods override</li>
     <li>extend support for inner/nested classes</li>
-    <li>Friend class: <a href="http://en.wikipedia.org/wiki/Friend_class">wikipedia</a></li>
+    <li>Friend class: <a href="http://en.wikipedia.org/wiki/Friend_class" target="_blank">wikipedia</a></li>
     <li>Interfaces and templates to consider</li>
 </ul>
-</span>
 
 
 <h3>Reserved words and "magic" methods</h3>
@@ -58,12 +57,12 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
 <b> Class public instance methods:</b>
 <ul>
     <li>__isClass</li>
-    <li>__destruct: to destroy the instantiated object</li>
+    <li>__construct: called at class instantiation</li>
+    <li>__destruct: this is just a pattern that calls all destroyers in chain. 
+        It's not called at GC object deletion. It's not possible with javascript at the moment</li>
     <li>__st: to call static methods from an instance</li>
     <li>__inherit</li>
     <li>__addMembers</li>
-    <li>__getMembers</li>
-    <li>__</li>
 </ul>
 <b> Class public static methods:</b>
 <ul>
@@ -75,7 +74,6 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
     <li>__isAbstract</li>
     <li>__isStatic</li>
     <li>__isFinal</li>
-    <li>__</li>
 </ul>
 
 <b> Class methods scope reserved variables:</b>
@@ -88,10 +86,10 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
     <li>this.__scope : the scope of function, internally used</li>
 </ul>
 
+<h3>Some class examples can be found here:</h3>
+<ul><li><a href="https://github.com/hw2-core/js-library-class/tree/gh-pages/samples" target="_blank">Sample files</a></li>
+    <li><a href="https://github.com/hw2-core/js-library-class/blob/tests/tests/class.js" target="_blank">Test file</a></li>
+</ul>
 
-<h3><a href="https://github.com/hw2-core/js-library-class/blob/tests/tests/class.js">
-Some class examples can be found in our test module
-</a></h3>
-
-
+</span>
 </pre>
