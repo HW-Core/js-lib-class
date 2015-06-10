@@ -1,4 +1,4 @@
-var HWCore = require("../hwcore/modulesjs/src/kernel/index.js");
+var HWCore = require("../hwcore/modules/js/src/kernel/index.js");
 
 HWCore(function () {
     var $ = this;
