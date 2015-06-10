@@ -4,7 +4,7 @@
  */
 
 // list of test files
-hw2.define(function () {
+hwc.define(function () {
     $ = this;
     return {
         dep: [
