@@ -5,8 +5,8 @@
 
 'use strict';
 
-hw2.include([
-    'hw2!{PATH_CORE}modules/js/modules/weakmap/index.js'
+hwc.include([
+    'hwc!{PATH_CORE}modules/js/modules/weakmap/index.js'
 ]).define(function () {
     var $ = this;
 
@@ -347,6 +347,7 @@ hw2.include([
                 enumerable: true
             });
 
+            // TODO: test
             Object.defineProperty(__Object, "__createInstance", {value: function () {
                     var Temp = function () {
                     }, inst, ret; // other vars

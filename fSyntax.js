@@ -5,8 +5,8 @@
 
 'use strict';
 
-hw2.define([
-    "hw2!{PATH_JS_LIB}class/Class.js"
+hwc.define([
+    "hwc!{PATH_JS_LIB}class/Class.js"
 ], function () {
     var $ = this;
 

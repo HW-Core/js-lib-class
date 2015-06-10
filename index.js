@@ -5,10 +5,10 @@
 
 'use strict';
 
-hw2.define([
-    'hw2!{PATH_JS_LIB}class/include.js',
-    'hw2!{PATH_JS_LIB}class/Class.js',
-    'hw2!{PATH_JS_LIB}class/fSyntax.js'
+hwc.define([
+    'hwc!{PATH_JS_LIB}class/include.js',
+    'hwc!{PATH_JS_LIB}class/Class.js',
+    'hwc!{PATH_JS_LIB}class/fSyntax.js'
 ],function (a,b,c) {
     var $ = this;
 });

@@ -6,7 +6,7 @@
 'use strict';
 
 /*
-hw2.define([
+hwc.define([
     // nothing to do for now
 ],function () {
     var $ = this;
