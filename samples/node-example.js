@@ -1,6 +1,6 @@
-var Hw2Core = require("../hw2/modules/js/src/kernel/index.js");
+var HWCore = require("../hwcore/modulesjs/src/kernel/index.js");
 
-Hw2Core(function () {
+HWCore(function () {
     var $ = this;
 
     $.include("bootstrap.js");

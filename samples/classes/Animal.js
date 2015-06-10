@@ -1,5 +1,5 @@
-hw2.include([
-    "hw2!{PATH_JS_LIB}class/fSyntax.js" // loading the friendly syntax for class
+hwc.include([
+    "hwc!{PATH_JS_LIB}class/fSyntax.js" // loading the friendly syntax for class
 ]).define(function () {
     var $ = this;
     // use an abstract class that cannot be instanced

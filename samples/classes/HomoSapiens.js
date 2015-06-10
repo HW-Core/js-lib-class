@@ -1,6 +1,6 @@
-hw2.include([
-    "hw2!classes/Name.js",
-    "hw2!classes/Animal.js"
+hwc.include([
+    "hwc!classes/Name.js",
+    "hwc!classes/Animal.js"
 ]).define(function (Name, Animal) {
     var $ = this;
 

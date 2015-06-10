@@ -3,9 +3,9 @@
  * GNU General Public License version 3; see www.hyperweb2.com/terms/
  */
 
-hw2.include([
-    "hw2!{PATH_JS_LIB}browser/application/Component.js",
-    "hw2!{PATH_JS_LIB}browser/application/System.js"
+hwc.include([
+    "hwc!{PATH_JS_LIB}browser/application/Component.js",
+    "hwc!{PATH_JS_LIB}browser/application/System.js"
 ]).define(function () {
     var $ = this;
 

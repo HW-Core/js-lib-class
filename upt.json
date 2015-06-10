@@ -1,8 +1,8 @@
 {
-    "name" : "hw2/modules/js/src/library/class/doc",
+    "name" : "hwcore/modulesjs/src/library/class/doc",
     "license" : "http://www.hyperweb2.com/terms",
     "dependencies": {
-        "%parent-lib": "hw2-core/js-library-class#*"
+        "%parent-lib": "hw-core/js-library-class#*"
     },
     "_comment_keep" : "ensure we keep the right git repository configurations",
     "keep": [

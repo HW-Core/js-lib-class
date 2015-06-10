@@ -1,5 +1,5 @@
-hw2.include([
-    "hw2!classes/HomoSapiens.js"
+hwc.include([
+    "hwc!classes/HomoSapiens.js"
 ]).define(function (HomoSapiens) {
     var cDarwin = new HomoSapiens(
         "Charles", "Robert", "Darwin",
