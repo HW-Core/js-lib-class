@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <!-- before using it, please adapt hwcore base path to your environment -->
+        <script data-hwc-auto-init src="../hwcore/modules/js/src/kernel/index.js"></script>
+        <!-- you can also use <script> tag to include class library, but
+        it's suggested to use hwc.include instead
+        <script src="../hwcore/modules/js/src/library/class/index.js"></script>
+        -->
+        <script>
+            hwc.include([
+              "hwc!{PATH_JS_LIB}class/index.js" // including library path
+            ]).defineFn(function () {
+                var $ = this;
+                /**
+                 * check if Class library is loaded ( It must be so )
+                 */
+                if ($.Class) {
+                    alert("== Class library loaded! ==");
+                }
+            });
+        </script>
+    </head>
+    <body>
+        It's an example file of how-to include jsclass in your project ( this is the same approach of nodejs ), please check page sources!
+    </body>
+</html>

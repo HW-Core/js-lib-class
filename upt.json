@@ -1,0 +1,11 @@
+{
+  "name": "js-class",
+  "homepage": "http://www.hyperweb2.com",
+  "authors": [
+    "Yehonal <hw.2@hotmail.it>"
+  ],
+  "description": "JSClass stand-alone release",
+  "dependencies": {
+    "%application": "hw-core/js-library-class"
+  }
+}
