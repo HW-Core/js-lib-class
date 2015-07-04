@@ -5,7 +5,7 @@
 
 // list of test files
 hwc.define(function () {
-    $ = this;
+    var $ = this;
     return {
         dep: [
             $.const.PATH_JS_LIB + "class/index.js"

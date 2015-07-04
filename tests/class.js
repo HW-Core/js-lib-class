@@ -1,10 +1,5 @@
-/*
- * Copyright (C) 2007 - 2014 Hyperweb2 All rights reserved.
- * GNU General Public License version 3; see www.hyperweb2.com/terms/
- */
-
 hwc.defTests(function () {
-    $ = this;
+    var $ = this;
 
     describe('Class', function () {
 
