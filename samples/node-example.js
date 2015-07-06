@@ -1,7 +1,5 @@
-var HWCore = require("../hwcore/modules/js/src/kernel/index.js");
+var hwc = require("../../hwcore/modules/js/src/kernel/index.js");
 
-HWCore(function () {
-    var $ = this;
-
-    $.include("bootstrap.js");
+hwc.init(function () {
+    this.include("bootstrap.js");
 });

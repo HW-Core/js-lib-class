@@ -1,4 +1,4 @@
-var HWCore = require("../hwcore/modules/js/src/kernel/index.js")();
+var hwc = require("../hwcore/modules/js/src/kernel/index.js").init();
 
 hwc.include([
     "hwc!{PATH_JS_LIB}class/index.js"
