@@ -1,21 +1,27 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+params="$@"
 
 function add_repo() {
-    (git --git-dir=$DIR/$3/$1/.git/ rev-parse && git --git-dir=$DIR/$3/$1/.git/ pull origin $2) || git clone git@github.com:HW-Core/$1.git -b $2 $DIR/$3/$1 
-	[ -f $DIR/$3/$1/install.sh ] && bash $DIR/$3/$1/install.sh
+    url=$1
+    name=$2
+    branch=$3
+    basedir=$4
+    path=$DIR/$basedir/$name
+    
+    (git --git-dir=$path/.git/ rev-parse && git --git-dir=$path/.git/ pull origin $branch) || git clone $url/$name.git -b $branch $path 
+	[ -f $DIR/$3/$1/install.sh ] && bash $path/install.sh $params
 }
 
 function add_file() {
     mkdir -p $2
-    wget $1 -P $2
+    wget -nc $1 -P $2
 }
-
 
 #
 # ADD DEPENDENCIES
 #
 
-add "js-kernel" "master" "../"
+add_repo "js-kernel" "master" "../"
 
