@@ -23,5 +23,5 @@ function add_file() {
 # ADD DEPENDENCIES
 #
 
-add_repo "git@github.com:HW-Core" "js-kernel" "master" "../"
+add_repo "https://github.com/HW-Core" "js-kernel" "master" "../"
 
