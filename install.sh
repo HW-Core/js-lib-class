@@ -10,7 +10,7 @@ function add_repo() {
     basedir=$4
     path=$DIR/$basedir/$name
     
-    (git --git-dir=$path/.git/ rev-parse && git --git-dir=$path/.git/ pull origin $branch) || git clone $url/$name.git -b $branch $path 
+    ([ -e $path/.git/ ] && git --git-dir=$path/.git/ rev-parse && git --git-dir=$path/.git/ pull origin $branch) || git clone $url/$name.git -b $branch $path 
 	[ -f $path/install.sh ] && bash $path/install.sh $params
 }
 
