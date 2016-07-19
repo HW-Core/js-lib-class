@@ -1,23 +1,9 @@
 #!/bin/bash
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-params="$@"
+PATH_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../../"
+[ ! -d $PATH_ROOT ] && git clone https://github.com/udw/joiner $PATH_ROOT/udw/joiner -b master
+source "$PATH_ROOT/udw/joiner/joiner.sh"
 
-function add_repo() {
-    url=$1
-    name=$2
-    branch=$3
-    basedir=$4
-    path=$DIR/$basedir/$name
-    
-    ([ -e $path/.git/ ] && git --git-dir=$path/.git/ rev-parse && git --git-dir=$path/.git/ pull origin $branch) || git clone $url/$name.git -b $branch $path 
-	[ -f $path/install.sh ] && bash $path/install.sh $params
-}
-
-function add_file() {
-    mkdir -p $2
-    [ ! -e $path/.git/ ] && curl -o $DIR/$2 $1
-}
 
 #
 # ADD DEPENDENCIES
