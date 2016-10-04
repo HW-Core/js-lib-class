@@ -9,5 +9,5 @@ source "$PATH_MODULES/uwd/joiner/joiner.sh"
 # ADD DEPENDENCIES
 #
 
-Joiner:add_repo "https://github.com/HW-Core" "js-kernel" "master" "hw-core"
+Joiner:add_repo "https://github.com/HW-Core/js-kernel.git" "js-kernel" "master" "hw-core"
 
