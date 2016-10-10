@@ -1,7 +1,7 @@
 'use strict';
 
 hwc.include([
-    'hwc!{PATH_CORE}modules/js/modules/weakmap/index.js'
+    'hwc!{PATH_CORE}/js-modules/weakmap/index.js'
 ]).define(function () {
     var $ = this;
 
