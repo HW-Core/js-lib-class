@@ -1,11 +1,11 @@
 [HWCore](https://hw-core.github.io) \-> [JS\-Library\-Class](https://github.com/hw-core/js-library-class) Documentation
 =======================================================================================================================
 
-*   [Home](#home)
-*   [Installation](#installation)
-*   [Getting started](#getting-started)
-    *   [Class Basic](#class-basic)
-    *   [Class Friendly](#class-friendly)
+*   [Home](index.md)
+*   [Installation](wiki/installation.html)
+*   [Getting started](wiki/getting-started.html)
+    *   [Class Basic](wiki/class-basic)
+    *   [Class Friendly](wiki/class-friendly.md)
 *   [Repository](https://github.com/hw-core/js-library-class)
 
 Javascript must be enabled in order to run this application
