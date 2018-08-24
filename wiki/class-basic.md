@@ -1,7 +1,11 @@
-<pre> 
-<h2> Basic Class Syntax </h2>
+ 
 
-   <h4> Note you can use a shorten version of members definitions that is the following:
+ Basic Class Syntax 
+--------------------
+
+   
+
+####  Note you can use a shorten version of members definitions that is the following:
             {
                 // in order: 
                 // attributes, return type, property name, property value
@@ -10,17 +14,17 @@
                 }
             },
             
-        But in following examples we will use the full syntax for a better understanding
+But in following examples we will use the full syntax for a better understanding
        
 
-<h3> How to create an abstract class: </h3>
+###  How to create an abstract class: 
 
     var $ = HWCore; // just an alias of HWCore
 
     var FirstName = $.Class({
-        <b>// specify class modifiers
+        // specify class modifiers
         // it can also be a string separated by spaces: "public abstract"
-        // NOTE: public could also be omitted in this case</b>
+        // NOTE: public could also be omitted in this case
         type: ["public", "abstract"],
         members: [
             {
@@ -33,11 +37,11 @@
                 val: function () {
                     return this.i.firstName;
                 },
-                attributes: "public"  <b>// you could omit , public is default</b>
+                attributes: "public"  // you could omit , public is default
             }
         ]});
 
-<h3> How to create a final class: </h3>
+###  How to create a final class: 
 
     var LastName = $.Class({type: "final", members: [
             {
@@ -59,18 +63,18 @@
             }
         ]});
 
-<h3> How to create a class that extends "FirstName" and use "LastName": </h3>
+###  How to create a class that extends "FirstName" and use "LastName": 
 
     var MyName = $.Class({
         type: "final",
         base: FirstName,
-        use: LastName, <b>// it can be also an array of classes</b>
+        use: LastName, // it can be also an array of classes
         members: [
             {
                 name: "nickName",
                 val: "baz",
-                retType: String,  <b>// it's the type-hinting , you can force data-type for this var</b>
-                attributes: ["private", "static"] <b>// you can also use a space-separated string</b>
+                retType: String,  // it's the type-hinting , you can force data-type for this var
+                attributes: ["private", "static"] // you can also use a space-separated string
             },
             {
                 name: "__construct",
@@ -82,7 +86,7 @@
                 attributes: "public"
             },
             {
-                <b>// override FirstName method to add nickname too</b>
+                // override FirstName method to add nickname too
                 name: "getFirstName",
                 val: function () {
                     return this.__super() + " ( " + this._s.nickName + " )";
@@ -94,24 +98,21 @@
                     return this._s.nickName;
                 },
                 attributes: ["public", "static"],
-                retType: "string" <b>// you can force a specified data-type to be returned</b>
+                retType: "string" // you can force a specified data-type to be returned
             }
         ]});
 
     var myName = new MyName("Hello", "World", "I'm a Class");
 
-<b>// you can compare your class instance with its base</b>
-    console.log(myName instanceof FirstName); <b>// true</b>
+    // you can compare your class instance with its base
+        console.log(myName instanceof FirstName); // true
 
+        console.log(myName.getFirstName()); // it prints Hello ( I'm a Class )
 
-    console.log(myName.getFirstName()); <b>// it prints Hello ( I'm a Class )</b>
+        console.log(myName.getLastName()); // it prints "World"
 
-    console.log(myName.getLastName()); <b>// it prints "World"</b>
+    // access to static members from instance using magic method __st
+        console.log(myName.__st.getNickName());  // it prints I'm a Class
 
-<b>// access to static members from instance using magic method __st</b>
-    console.log(myName.__st.getNickName());  <b>// it prints I'm a Class</b>
-
-<b>// access to static method directly from class name</b>
-    console.log(MyName.getNickName()); <b>// it prints I'm a Class</b>
-
-</pre>
+    // access to static method directly from class name
+        console.log(MyName.getNickName()); // it prints I'm a Class
