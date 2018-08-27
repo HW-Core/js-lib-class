@@ -11,6 +11,8 @@ languages to javascript.
 
 Read [How to install](wiki/installation.md) and [start to use](wiki/getting-started.md) JsClass
 
+[HERE](wiki/getting-started.md#current-supported-features) you can find a list of current supported features
+
 this project is in high development state, if you have some issues please <a target="_blank" href="https://github.com/hw-core/js-library-class/issues">report it</a>
 Also the documentation has not been completed yet.
 
