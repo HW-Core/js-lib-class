@@ -1,16 +1,22 @@
-**To install** 
+# Installation 
 ---------------
 
-**requirements for installation ( not for library itself )**:
-[nodejs 0.10.+ ( older not tested )](http://nodejs.org/)
-[upt 1.5.7+](http://github.com/hyperweb2/upt)
+### Method 1: Github release (bundle installation only)
 
-if you don't have upt, please install it using [npm](https://www.npmjs.org/) : 
-npm install -g upt ( this command on linux requires to run with root permission )
+Download latest minified file from github release 
 
-execute this command in a terminal ( nodejs cmd on windows ):
+<https://github.com/HW-Core/js-lib-class/releases>
 
-**upt install hw-core/js-library-class**
+### Method 2: With Joiner package manager ( For all Platform / OS : run in bash >= 4.x )**
 
-You could also download the precompiled package ( JSClass.zip ) in 
-[releases list](https://github.com/hw-core/js-library-class/releases) . But using upt is re
+Run this command in your bash console (even on windows) and this repository will be downloaded with related dependencies
+
+    repo="hw-core/js-lib-class"; git clone https://github.com/$repo.git $repo; ./$repo/install.sh
+    
+**UPDATING**: You can keep your jsclass version updated with this command in jsclass folder:
+
+    git pull origin master && bash ./install.sh
+
+### Method 3: npm (soon)
+
+
