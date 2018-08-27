@@ -1,10 +1,12 @@
 'use strict';
 
-var hwc_conf = typeof window === 'object' ? window.hwc_conf : global.hwc_conf;
+var __global = typeof window === 'object' ? window : global, hwc_conf = __global.hwc_conf;
+
+hwc_conf.paths.hwc_js_lib_class_include = hwc_conf.path_core + "js-lib-class/include";
+requirejs.config({paths: hwc_conf.paths});
 
 define([
-    "hwc_js_kernel",
-    "hwc_js_modules_weakmap"
+    "hwc_js_lib_class_include"
 ],function ($) {
     /*
      * 

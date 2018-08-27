@@ -5,11 +5,14 @@
 
 'use strict';
 
-var hwc_conf = typeof window === 'object' ? window.hwc_conf : global.hwc_conf;
+var __global = typeof window === 'object' ? window : global, hwc_conf = __global.hwc_conf;
+
+hwc_conf.paths.hwc_js_lib_class_class = hwc_conf.path_core + "js-lib-class/Class";
+requirejs.config({paths: hwc_conf.paths});
 
 define([
     "hwc_js_kernel",
-    hwc_conf.path_core + "js-lib-class/Class.js",
+    "hwc_js_lib_class_class",
 ], function ($) {
     function buildMembers (members, modifiers) {
         var m = [];

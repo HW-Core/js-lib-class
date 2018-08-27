@@ -19,6 +19,7 @@ if (typeof module !== 'undefined' && module.exports) {
     var exports = kernel_module;
 
     exports.entry = [
+        hwc_conf.paths.hwc_js_kernel + ".js",
         hwc_conf.paths.hwc_js_lib_class_index + ".js"
     ];
 

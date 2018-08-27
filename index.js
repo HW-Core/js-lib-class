@@ -4,11 +4,13 @@
  */
 
 'use strict';
-
 var hwc_conf = typeof window === 'object' ? window.hwc_conf : global.hwc_conf;
 
+hwc_conf.paths.hwc_js_lib_class_fsyntax = hwc_conf.path_core + "js-lib-class/fSyntax";
+requirejs.config({paths: hwc_conf.paths});
+
 define([
-    hwc_conf.path_core + "js-lib-class/fSyntax.js"
+    "hwc_js_lib_class_fsyntax"
 ],function ($) {
     return $;
 });

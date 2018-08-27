@@ -6,7 +6,8 @@
 'use strict';
 
 define([
-   "hwc_js_kernel_loader"
-],function () {
-
+    "hwc_js_kernel",
+    "hwc_js_modules_weakmap"
+],function ($) {
+    return $;
 });
