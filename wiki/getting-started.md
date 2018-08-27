@@ -1,10 +1,29 @@
  == [Class](https://github.com/hw-core/js-library-class/blob/master/Class.js) ==
 
-### Getting started
+## Getting started: Include JSClass library in your project
 
-First of all, you've to configure your environment to run HWCore framework ( take a look at kernel [documentation](https://github.com/hw-core/js-kernel) )
+### Method 1: all-in-one minified bundle
 
-Now, there are 2 ways to define a class:
+Note: This kind of usage is the easies but breaks the modularity of hw-core framework. 
+If you are really sure that you need this library only from hw-core collection, then this method is recommended
+
+**Browser**
+
+    <script src="path-to-minified-file/hwc-class.min.js"><script>
+    
+**Nodejs**
+
+    var hwc=require("path-to-minified-file/hwc-class.min");
+
+### Method 2: Modular loading
+
+You've to configure your environment to run HWCore framework and then load the js-lib-class module ( take a look at kernel [documentation](https://github.com/hw-core/js-kernel) )
+
+## Work with classes
+
+After you've configured your environments, Your are ready to work with classes!
+
+There are 2 ways to define a class:
 
 [Basic syntax](#class-basic) ( faster performance but verbose and a little more complex )
 
