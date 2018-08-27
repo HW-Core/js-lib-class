@@ -53,7 +53,7 @@ This is an example using friendly syntax. Use links above for more details.
 
 *   **Static members**
 *   **Final members:** its value cannot be changed
-*   **Type-hinted members **
+*   **Type-hinted members**
 
 ### Work in progress features
 
