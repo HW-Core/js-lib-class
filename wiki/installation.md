@@ -3,7 +3,9 @@
 
 ### Method 1: Github release (bundle installation only)
 
-Download latest minified file from github release https://github.com/HW-Core/js-lib-class/releases
+Download latest minified file from github release 
+
+<https://github.com/HW-Core/js-lib-class/releases>
 
 ### Method 2: With Joiner package manager ( For all Platform / OS : run in bash >= 4.x )**
 
