@@ -5,10 +5,10 @@
 
 'use strict';
 
-var hwc_conf = typeof window === 'object' ? window.hwc_conf : global.hwc_conf;
-
 define([
-    hwc_conf.path_core + "js-lib-class/fSyntax.js"
-],function ($) {
-    return $;
+    "hwc_js_kernel_loader",
+    "hwc_js_lib_class_fsyntax"
+], function ($) {
+    // used for webpack mainly
+    $.init();
 });

@@ -5,10 +5,8 @@
 
 'use strict';
 
-/*
-hwc.define([
-    // nothing to do for now
+define([
+   "hwc_js_kernel_loader"
 ],function () {
-    var $ = this;
+
 });
-*/

@@ -1,10 +1,11 @@
 'use strict';
 
-hwc.include([
-    'hwc!{PATH_CORE}/js-modules/weakmap/index.js'
-]).define(function () {
-    var $ = this;
+var hwc_conf = typeof window === 'object' ? window.hwc_conf : global.hwc_conf;
 
+define([
+    "hwc_js_kernel",
+    "hwc_js_modules_weakmap"
+],function ($) {
     /*
      * 
      * SHARED BETWEEN CLASSES
@@ -719,5 +720,7 @@ hwc.include([
 
         return new __Class();
     };
+
+    return $;
 });
 

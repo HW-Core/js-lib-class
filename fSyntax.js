@@ -5,11 +5,12 @@
 
 'use strict';
 
-hwc.define([
-    "hwc!{PATH_JS_LIB}class/Class.js"
-], function () {
-    var $ = this;
+var hwc_conf = typeof window === 'object' ? window.hwc_conf : global.hwc_conf;
 
+define([
+    "hwc_js_kernel",
+    hwc_conf.path_core + "js-lib-class/Class.js",
+], function ($) {
     function buildMembers (members, modifiers) {
         var m = [];
         for (var name in members) {
@@ -328,4 +329,6 @@ hwc.define([
 
         return new $.dType(type, value);
     };
+
+    return $;
 });
