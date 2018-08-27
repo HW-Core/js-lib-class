@@ -35,25 +35,25 @@ This is an example using friendly syntax. Use links above for more details.
 
 ### Current supported features
 
-*   Abstract class: Cannot be instantiated
-*   Static class: A class that has only static members and cannot be instantiated
-*   Final class: Cannot be extended
-*   Base/Extension: your object inherits all methods of extended class and they shares
+*   **Abstract class:** Cannot be instantiated
+*   **Static class:** A class that has only static members and cannot be instantiated
+*   **Final class:** Cannot be extended
+*   **Base/Extension:** your object inherits all methods of extended class and they shares
         prototype that allows you to cast the instanceof succesfully
     
-*   Use: it's the mechanism of traits used also by other languages 
+*   **Use:** it's the mechanism of traits used also by other languages 
         that enables horizontal composition of behavior. in few words: 
         you can use methods from other objects. 
     
 
 
-*   Protected members: accessible only from its original class and childs
-*   Private members
-*   Public members
+*   **Protected members:** accessible only from its original class and childs
+*   **Private members**
+*   **Public members**
 
-*   Static members
-*   Final members: its value cannot be changed
-*   Type-hinted members 
+*   **Static members**
+*   **Final members:** its value cannot be changed
+*   **Type-hinted members **
 
 ### Work in progress features
 
