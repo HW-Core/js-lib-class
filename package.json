@@ -1,5 +1,11 @@
 {
-  "name": "js-lib-class",
+  "name": "jsclass",
+  "version": "2.0.0",
+  "description": "Full featured module that aims to port the complete class logic of other OOP languages to javascript.",
+  "keywords": ["class", "oop", "javascript", "ES5", "ES6"],
+  "author": "hw-core, Yehonal",
+  "license" : "AGPL3",
+  "homepage" : "https://hw-core.github.io/js-lib-class/",
   "scripts": {
     "build": "webpack --progress"
   },
