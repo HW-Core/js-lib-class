@@ -10,10 +10,15 @@ If you are really sure that you need this library only from hw-core collection, 
 **Browser**
 
     <script src="path-to-minified-file/hwc-class.min.js"><script>
+    
+**Nodejs**
+
+The minified file is currently not supported by server, please use Method 2 below
 
 ### Method 2: Modular loading
 
 **Browser**
+
 You've to configure your environment to run HWCore framework and then load the js-lib-class module ( take a look at kernel [documentation](https://github.com/hw-core/js-kernel) )
 
 **Nodejs**
