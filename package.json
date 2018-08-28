@@ -1,13 +1,24 @@
 {
   "name": "@hw-core/js-lib-class",
-  "version": "2.0.0",
+  "version": "2.0.8",
   "description": "Full featured module that aims to port the complete class logic of other OOP languages to javascript.",
-  "keywords": ["class", "oop", "javascript", "ES5", "ES6"],
+  "keywords": [
+    "class",
+    "oop",
+    "javascript",
+    "ES5",
+    "ES6"
+  ],
   "author": "hw-core, Yehonal",
-  "license" : "AGPL3",
-  "homepage" : "https://hw-core.github.io/js-lib-class/",
+  "license": "AGPL3",
+  "homepage": "https://hw-core.github.io/js-lib-class/",
+  "main": "index.node.js",
   "scripts": {
+    "pub": "npm run build && npm publish --access public",
     "build": "webpack --progress"
+  },
+  "dependencies": {
+    "@hw-core/js-kernel": "^2.0.3"
   },
   "devDependencies": {
     "script-loader": "^0.7.2",
