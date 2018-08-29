@@ -105,5 +105,5 @@ All magic methods starts with __ prefix, so don't use this prefix for your varia
 
 ### Some class examples can be found here:
 
-*   [Sample files](https://github.com/hw-core/js-library-class/tree/gh-pages/samples)
+*   [Sample files](https://github.com/HW-Core/js-lib-class/tree/release/samples/classes)
 *   [Test file](https://github.com/hw-core/js-library-class/blob/tests/tests/class.js)
